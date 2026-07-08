@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PackLoadError } from '../content';
 import { createHeadlessPlatform } from '../platform';
-import { MOTION, PLAYER_CONTROLLED, POSITION, REGION } from '../systems';
+import { IDLE_MOTION, MOTION, PLAYER_CONTROLLED, POSITION, REGION } from '../systems';
 import { bootWorld } from './boot';
 import { packFilesFromBundle } from './pack-bundle';
 
@@ -36,7 +36,7 @@ describe('bootWorld', () => {
     const player = handle.spawned.player;
     expect(handle.world.getComponent(player, POSITION)).toEqual({ x: 160, y: 90 });
     expect(handle.world.getComponent(player, PLAYER_CONTROLLED)?.speed).toBeGreaterThan(0);
-    expect(handle.world.getComponent(player, MOTION)).toEqual({ moving: false });
+    expect(handle.world.getComponent(player, MOTION)).toEqual(IDLE_MOTION);
   });
 
   it('rejects an invalid pack atomically with diagnostics (FR-ARCH-030)', () => {

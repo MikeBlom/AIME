@@ -1,22 +1,30 @@
 /**
- * Movement System — drives player-controlled entities from the Input
- * System's intent slice, through the fixed-step loop (issue #15; intent
- * consumption per issue #17).
+ * Movement System — translates the Input System's move intents into entity
+ * motion through acceleration/friction velocity integration (issue #19;
+ * spec: docs/15-Movement-and-Traversal.md).
  *
- * Conforms to the System lifecycle (FR-ARCH-005..008): it reads the
- * INPUT_INTENT world-state slice — never raw keys or pointers — and writes
- * only the slices it owns (position and motion, FR-ARCH-015), announcing
- * start/stop transitions as deferred events (FR-ARCH-012). Its `input`
- * dependency is ordering only: with no Input System registered the intent
- * slice is simply absent and the entity rests (FR-ARCH-008). Update is
- * pure with respect to (world state, dt): no wall clock, no unseeded
- * randomness (NFR-ARCH-001), so recorded sessions replay identically
- * (FR-ARCH-025).
+ * Each fixed step it derives a desired velocity from the intent slice
+ * (keyboard axes at top speed, or arrive-steering toward a move-toward
+ * target), moves the actual velocity toward it at the acceleration rate —
+ * or toward rest at the friction rate when the intent clears — then
+ * integrates position semi-implicitly and clamps to the traversable space,
+ * killing velocity into a boundary. The MOTION slice it owns (FR-ARCH-015)
+ * exposes velocity and facing for animation and camera consumers; motion
+ * start/stop transitions are announced as deferred events (FR-ARCH-012).
+ *
+ * Determinism (NFR-ARCH-001): update is pure with respect to (world state,
+ * dt) and uses only IEEE-exact arithmetic plus `Math.sqrt` (correctly
+ * rounded, unlike `Math.hypot`), so identical inputs reproduce identical
+ * motion (FR-ARCH-025). Its `input` dependency is ordering only: with no
+ * Input System the intent slice is absent and the entity coasts to rest
+ * (FR-ARCH-008).
  */
 import type { EntityStore, Plugin, System, SystemContext } from '../core';
 import { INPUT_INTENT } from './input';
 import type { InputIntent } from './input';
+import type { Motion } from './scene';
 import {
+  IDLE_MOTION,
   LOGICAL_SPACE,
   MOTION,
   MOVEMENT_STARTED,
@@ -25,8 +33,18 @@ import {
   POSITION,
 } from './scene';
 
+/** Engine tuning defaults (logical units/s²); per-entity data overrides. */
+export const DEFAULT_ACCELERATION = 720;
+export const DEFAULT_FRICTION = 960;
+
 /** Move-toward targets count as reached within this many logical units. */
 const ARRIVAL_EPSILON = 0.5;
+
+/** Arrive-steering brakes to this fraction of the ideal stopping speed. */
+const ARRIVE_SAFETY = 0.9;
+
+/** Below this speed (units/s) a coasting entity snaps to rest. */
+const REST_SPEED_EPSILON = 0.25;
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
@@ -50,38 +68,98 @@ export const movementSystem: System = {
       const position = context.world.getComponent(entity, POSITION);
       const control = context.world.getComponent(entity, PLAYER_CONTROLLED);
       if (position === undefined || control === undefined) continue;
+      const motion = context.world.getComponent(entity, MOTION) ?? IDLE_MOTION;
+      const acceleration = control.acceleration ?? DEFAULT_ACCELERATION;
+      const friction = control.friction ?? DEFAULT_FRICTION;
 
-      let direction = { x: Math.sign(intent.moveX), y: Math.sign(intent.moveY) };
-      let stepLength = control.speed * dt;
-      if (direction.x === 0 && direction.y === 0 && intent.toX !== null && intent.toY !== null) {
-        // Move-toward intent (touch/pointer): head for the target, landing
-        // exactly on arrival so the entity never orbits it.
+      // Desired velocity from the intent: axis wins over move-toward.
+      let desiredX = 0;
+      let desiredY = 0;
+      const axisX = Math.sign(intent.moveX);
+      const axisY = Math.sign(intent.moveY);
+      if (axisX !== 0 || axisY !== 0) {
+        // Normalize diagonals so top speed is direction-independent.
+        const scale = axisX !== 0 && axisY !== 0 ? Math.SQRT1_2 : 1;
+        desiredX = axisX * scale * control.speed;
+        desiredY = axisY * scale * control.speed;
+      } else if (intent.toX !== null && intent.toY !== null) {
         const dx = intent.toX - position.x;
         const dy = intent.toY - position.y;
-        // sqrt is IEEE-correctly-rounded (hypot is not), keeping simulation
-        // arithmetic reproducible across hosts (NFR-ARCH-001).
         const distance = Math.sqrt(dx * dx + dy * dy);
         if (distance > ARRIVAL_EPSILON) {
-          direction = { x: dx / distance, y: dy / distance };
-          stepLength = Math.min(stepLength, distance);
+          // Arrive steering: cap the approach speed at what can still brake
+          // to a stop within the remaining distance, so the entity settles
+          // on the target instead of overshooting or orbiting it.
+          const arriveSpeed = Math.min(
+            control.speed,
+            Math.sqrt(2 * acceleration * distance) * ARRIVE_SAFETY,
+          );
+          desiredX = (dx / distance) * arriveSpeed;
+          desiredY = (dy / distance) * arriveSpeed;
         }
-      } else if (direction.x !== 0 && direction.y !== 0) {
-        // Normalize diagonals so axis speed is direction-independent.
-        const scale = Math.SQRT1_2;
-        direction = { x: direction.x * scale, y: direction.y * scale };
       }
 
-      const moving = direction.x !== 0 || direction.y !== 0;
-      if (moving) {
-        context.world.addComponent(entity, POSITION, {
-          x: clamp(position.x + direction.x * stepLength, 0, LOGICAL_SPACE.width),
-          y: clamp(position.y + direction.y * stepLength, 0, LOGICAL_SPACE.height),
-        });
+      // Velocity integration: approach the desired velocity at the
+      // acceleration rate, or coast toward rest at the friction rate.
+      const accelerating = desiredX !== 0 || desiredY !== 0;
+      const rate = accelerating ? acceleration : friction;
+      const deltaX = desiredX - motion.velocityX;
+      const deltaY = desiredY - motion.velocityY;
+      const deltaLength = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+      const maxDelta = rate * dt;
+      let velocityX: number;
+      let velocityY: number;
+      if (deltaLength <= maxDelta) {
+        velocityX = desiredX;
+        velocityY = desiredY;
+      } else {
+        velocityX = motion.velocityX + (deltaX / deltaLength) * maxDelta;
+        velocityY = motion.velocityY + (deltaY / deltaLength) * maxDelta;
+      }
+      if (
+        !accelerating &&
+        Math.sqrt(velocityX * velocityX + velocityY * velocityY) < REST_SPEED_EPSILON
+      ) {
+        velocityX = 0;
+        velocityY = 0;
       }
 
-      const wasMoving = context.world.getComponent(entity, MOTION)?.moving ?? false;
-      if (moving !== wasMoving) {
-        context.world.addComponent(entity, MOTION, { moving });
+      // Semi-implicit fixed-step integration, clamped to the traversable
+      // space; velocity into a boundary dies so the entity rests against
+      // it instead of grinding.
+      if (velocityX !== 0 || velocityY !== 0) {
+        const rawX = position.x + velocityX * dt;
+        const rawY = position.y + velocityY * dt;
+        const nextX = clamp(rawX, 0, LOGICAL_SPACE.width);
+        const nextY = clamp(rawY, 0, LOGICAL_SPACE.height);
+        if (nextX !== rawX) velocityX = 0;
+        if (nextY !== rawY) velocityY = 0;
+        if (nextX !== position.x || nextY !== position.y) {
+          context.world.addComponent(entity, POSITION, { x: nextX, y: nextY });
+        }
+      }
+
+      const speedNow = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
+      const moving = speedNow > 0;
+      const next: Motion = {
+        moving,
+        velocityX,
+        velocityY,
+        // Facing holds its last direction while at rest, so consumers
+        // always have a unit direction to point at.
+        facingX: moving ? velocityX / speedNow : motion.facingX,
+        facingY: moving ? velocityY / speedNow : motion.facingY,
+      };
+      if (
+        next.moving !== motion.moving ||
+        next.velocityX !== motion.velocityX ||
+        next.velocityY !== motion.velocityY ||
+        next.facingX !== motion.facingX ||
+        next.facingY !== motion.facingY
+      ) {
+        context.world.addComponent(entity, MOTION, next);
+      }
+      if (moving !== motion.moving) {
         context.events.publish(moving ? MOVEMENT_STARTED : MOVEMENT_STOPPED, {
           entityId: entity,
         });

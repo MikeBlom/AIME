@@ -10,6 +10,7 @@ import type { ResolvedContentGraph } from '../content';
 import {
   ASSET_MANIFEST,
   CAMERA,
+  IDLE_MOTION,
   LOGICAL_SPACE,
   MOTION,
   PLAYER_CONTROLLED,
@@ -113,7 +114,7 @@ export function spawnWorld(world: EntityStore, graph: ResolvedContentGraph): Spa
     y: LOGICAL_SPACE.height / 2,
   });
   world.addComponent(player, PLAYER_CONTROLLED, { speed: PLAYER_SPEED });
-  world.addComponent(player, MOTION, { moving: false });
+  world.addComponent(player, MOTION, IDLE_MOTION);
   world.addComponent(player, RENDERABLE, { kind: 'player', ...PLAYER_SIZE });
 
   return { regionId: regionEntity.id, player };

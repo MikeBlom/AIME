@@ -52,6 +52,7 @@ export {
 export type { AssetManifest, Camera, RenderMotion } from './render';
 export {
   fitTransform,
+  IDLE_MOTION,
   LOGICAL_SPACE,
   MOTION,
   MOVEMENT_STARTED,
