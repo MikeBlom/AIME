@@ -17,7 +17,8 @@
     "build:content": "tsc -p tsconfig.content.json",
     "validate:content": "npm run build:content && node scripts/validate-content.mjs",
     "check:literals": "node scripts/check-career-literals.mjs",
-    "check": "npm run build && npm run test && npm run lint && npm run format && npm run validate:content && npm run check:literals"
+    "check:host-coupling": "node scripts/check-host-coupling.mjs",
+    "check": "npm run build && npm run test && npm run lint && npm run format && npm run validate:content && npm run check:literals && npm run check:host-coupling"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
