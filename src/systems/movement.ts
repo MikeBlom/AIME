@@ -75,7 +75,9 @@ export const movementSystem: System = {
         // position, landing exactly on arrival so the entity never orbits.
         const dx = controls.pointer.x - position.x;
         const dy = controls.pointer.y - position.y;
-        const distance = Math.hypot(dx, dy);
+        // sqrt is IEEE-correctly-rounded (hypot is not), keeping simulation
+        // arithmetic reproducible across hosts (NFR-ARCH-001).
+        const distance = Math.sqrt(dx * dx + dy * dy);
         if (distance > ARRIVAL_EPSILON) {
           direction = { x: dx / distance, y: dy / distance };
           stepLength = Math.min(stepLength, distance);
