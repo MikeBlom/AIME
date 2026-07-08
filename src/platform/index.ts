@@ -8,6 +8,7 @@
  */
 export type {
   AudioOutput,
+  AudioPlayOptions,
   InputDevice,
   InputSnapshot,
   KeyValueStorage,
@@ -25,6 +26,7 @@ export type { BrowserHost } from './browser-host';
 
 export { createHeadlessPlatform } from './headless';
 export type {
+  AudioPlayCall,
   HeadlessAudioOutput,
   HeadlessInputDevice,
   HeadlessPlatform,

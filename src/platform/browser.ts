@@ -5,8 +5,9 @@
  * appear — the check-host-coupling gate enforces exactly that boundary
  * (NFR-ARCH-004).
  *
- * Audio is a stub honoring the AudioOutput contract; real mixing arrives
- * with the Phase 1 Audio System and changes only this layer.
+ * Audio plays through media elements: one-shot cues plus looping channel
+ * beds, volumes under a master level. Full mixing (stereo pan and beyond)
+ * upgrades to WebAudio inside this layer only.
  */
 import type {
   AudioOutput,
@@ -125,15 +126,48 @@ function createInputDevice(canvas: HTMLCanvasElement): InputDevice & { dispose()
 }
 
 function createAudioOutput(): AudioOutput {
-  // Stub honoring the contract (the issue allows stubs where not yet used):
-  // calls are accepted and volume is tracked so callers behave identically
-  // when the real backend lands with the Phase 1 Audio System.
+  // Media-element playback: enough to make cues and beds audible once real
+  // assets ship. A ref that fails to load or decode stays silent — the
+  // world never faults over a missing sound (FR-ARCH-008). `pan` is
+  // accepted as the spatialization hook; applying it needs a WebAudio
+  // mixer, which arrives in this layer without touching any System.
+  const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
+  const loops = new Map<string, { element: HTMLAudioElement; soundRef: string; gain: number }>();
   let masterVolume = 1;
+  const applyLoopVolumes = () => {
+    for (const loop of loops.values()) {
+      loop.element.volume = clamp01(loop.gain) * masterVolume;
+    }
+  };
   return {
-    play: () => {},
+    play: (soundRef, options) => {
+      const element = new Audio(soundRef);
+      element.volume = clamp01(options?.gain ?? 1) * masterVolume;
+      element.play().catch(() => undefined);
+    },
+    setLoop: (channel, soundRef, options) => {
+      const current = loops.get(channel);
+      if (soundRef === null) {
+        current?.element.pause();
+        loops.delete(channel);
+        return;
+      }
+      const gain = options?.gain ?? 1;
+      if (current !== undefined && current.soundRef === soundRef) {
+        current.gain = gain;
+        current.element.volume = clamp01(gain) * masterVolume;
+        return;
+      }
+      current?.element.pause();
+      const element = new Audio(soundRef);
+      element.loop = true;
+      element.volume = clamp01(gain) * masterVolume;
+      loops.set(channel, { element, soundRef, gain });
+      element.play().catch(() => undefined);
+    },
     setMasterVolume: (level) => {
-      masterVolume = Math.min(1, Math.max(0, level));
-      void masterVolume;
+      masterVolume = clamp01(level);
+      applyLoopVolumes();
     },
   };
 }

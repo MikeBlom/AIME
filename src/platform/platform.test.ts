@@ -79,6 +79,21 @@ describe('audio and storage stubs (deliverable: interfaces fixed now)', () => {
     expect(audio.masterVolume).toBe(1);
   });
 
+  it('records cue parameters and looping channel state (audio contract)', () => {
+    const { audio } = createHeadlessPlatform();
+    audio.play('assets/chime.ogg', { gain: 0.5, pan: -1 });
+    expect(audio.playCalls).toEqual([{ soundRef: 'assets/chime.ogg', gain: 0.5, pan: -1 }]);
+
+    audio.setLoop('ambient', 'assets/bed.ogg', { gain: 0.8 });
+    audio.setLoop('music', 'assets/tune.ogg');
+    expect(audio.loops).toEqual({
+      ambient: { soundRef: 'assets/bed.ogg', gain: 0.8 },
+      music: { soundRef: 'assets/tune.ogg', gain: 1 },
+    });
+    audio.setLoop('ambient', null);
+    expect(audio.loops).toEqual({ music: { soundRef: 'assets/tune.ogg', gain: 1 } });
+  });
+
   it('storage round-trips and removes values', () => {
     const { storage } = createHeadlessPlatform();
     expect(storage.read('save.slot1')).toBeNull();
