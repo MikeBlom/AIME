@@ -107,4 +107,31 @@ describe('bootWorld', () => {
     expect(position !== undefined && position.x > 160).toBe(true);
     expect(position?.y).toBe(90);
   });
+
+  it('keyboard and touch produce equivalent movement intents end to end', () => {
+    // Same duration, same direction: a held right arrow and a held touch
+    // far to the right displace the player identically.
+    const keyboard = boot();
+    const keyboardStop = keyboard.handle.start();
+    keyboard.platform.input.press('ArrowRight');
+    for (let i = 0; i < 30; i += 1) keyboard.platform.timers.tick(DT);
+    keyboardStop();
+
+    const touch = boot();
+    const touchStop = touch.handle.start();
+    // Surface (640, 180) maps to logical (320, 90): due right of the player.
+    touch.platform.input.movePointer(640, 180);
+    touch.platform.input.setButton(0, true);
+    for (let i = 0; i < 30; i += 1) touch.platform.timers.tick(DT);
+    touchStop();
+
+    const keyboardPosition = keyboard.handle.world.getComponent(
+      keyboard.handle.spawned.player,
+      POSITION,
+    );
+    const touchPosition = touch.handle.world.getComponent(touch.handle.spawned.player, POSITION);
+    expect(keyboardPosition).toBeDefined();
+    expect(touchPosition?.x).toBeCloseTo(keyboardPosition?.x ?? 0, 10);
+    expect(touchPosition?.y).toBeCloseTo(keyboardPosition?.y ?? 0, 10);
+  });
 });

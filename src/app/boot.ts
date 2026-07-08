@@ -11,6 +11,7 @@ import type { PackFiles, ResolvedContentGraph } from '../content';
 import { loadPack } from '../content';
 import type { Platform } from '../platform';
 import {
+  inputPlugin,
   movementPlugin,
   pointerToLogical,
   renderFrame,
@@ -59,6 +60,7 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
 
   const registry = new ModuleRegistry();
   registry.register(scenePlugin);
+  registry.register(inputPlugin);
   registry.register(movementPlugin);
   registry.register(renderPlugin);
 

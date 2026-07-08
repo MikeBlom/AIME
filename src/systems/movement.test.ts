@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import type { ComponentData, SystemContext } from '../core';
+import type { SystemContext } from '../core';
 import { deepFreeze, EntityStore, EventBus, RngService, TimeService } from '../core';
+import type { InputIntent } from './input';
+import { INPUT_INTENT } from './input';
 import { movementSystem } from './movement';
 import {
   LOGICAL_SPACE,
@@ -9,16 +11,14 @@ import {
   MOVEMENT_STOPPED,
   PLAYER_CONTROLLED,
   POSITION,
-  readControls,
 } from './scene';
 
 const DT = 1 / 60;
 const SPEED = 60;
 
-function makeContext(
-  input: ComponentData,
-): SystemContext & { setInput(next: ComponentData): void } {
-  let current = deepFreeze(input);
+const IDLE: InputIntent = { moveX: 0, moveY: 0, toX: null, toY: null, interact: false };
+
+function makeContext(): SystemContext {
   return {
     world: new EntityStore(),
     events: new EventBus({ logEnabled: true }),
@@ -26,19 +26,15 @@ function makeContext(
     platform: {},
     time: new TimeService(DT),
     rng: new RngService(1),
-    input: {
-      get current() {
-        return current;
-      },
-    },
-    setInput(next: ComponentData) {
-      current = deepFreeze(next);
-    },
+    input: { current: deepFreeze({}) },
   };
 }
 
-function controls(keys: string[], pointer?: { x: number; y: number; buttons: number[] }) {
-  return { keys, pointer: pointer ?? { x: 0, y: 0, buttons: [] } };
+/** Write the intent slice the way the Input System would. */
+function setIntent(context: SystemContext, intent: Partial<InputIntent>) {
+  const [existing] = context.world.query(INPUT_INTENT);
+  const entity = existing ?? context.world.createEntity();
+  context.world.addComponent(entity, INPUT_INTENT, { ...IDLE, ...intent });
 }
 
 function spawnPlayer(context: SystemContext, x = 100, y = 100) {
@@ -50,19 +46,16 @@ function spawnPlayer(context: SystemContext, x = 100, y = 100) {
 }
 
 describe('movementSystem', () => {
-  it('moves the player along each keyboard axis at speed * dt', () => {
+  it('moves the player along each intent axis at speed * dt', () => {
     const cases = [
-      { key: 'ArrowRight', dx: SPEED * DT, dy: 0 },
-      { key: 'ArrowLeft', dx: -SPEED * DT, dy: 0 },
-      { key: 'ArrowDown', dx: 0, dy: SPEED * DT },
-      { key: 'ArrowUp', dx: 0, dy: -SPEED * DT },
-      { key: 'KeyD', dx: SPEED * DT, dy: 0 },
-      { key: 'KeyA', dx: -SPEED * DT, dy: 0 },
-      { key: 'KeyS', dx: 0, dy: SPEED * DT },
-      { key: 'KeyW', dx: 0, dy: -SPEED * DT },
+      { intent: { moveX: 1 }, dx: SPEED * DT, dy: 0 },
+      { intent: { moveX: -1 }, dx: -SPEED * DT, dy: 0 },
+      { intent: { moveY: 1 }, dx: 0, dy: SPEED * DT },
+      { intent: { moveY: -1 }, dx: 0, dy: -SPEED * DT },
     ];
-    for (const { key, dx, dy } of cases) {
-      const context = makeContext(controls([key]));
+    for (const { intent, dx, dy } of cases) {
+      const context = makeContext();
+      setIntent(context, intent);
       const player = spawnPlayer(context);
       movementSystem.update(DT, context);
       const position = context.world.getComponent(player, POSITION);
@@ -71,8 +64,9 @@ describe('movementSystem', () => {
     }
   });
 
-  it('normalizes diagonal keyboard movement to the same speed', () => {
-    const context = makeContext(controls(['KeyD', 'KeyS']));
+  it('normalizes diagonal axis movement to the same speed', () => {
+    const context = makeContext();
+    setIntent(context, { moveX: 1, moveY: 1 });
     const player = spawnPlayer(context);
     movementSystem.update(DT, context);
     const position = context.world.getComponent(player, POSITION);
@@ -81,35 +75,38 @@ describe('movementSystem', () => {
     expect(position?.y).toBeCloseTo(100 + step, 10);
   });
 
-  it('steers toward a held pointer and lands exactly on the target', () => {
-    const target = { x: 104, y: 100 };
-    const context = makeContext(controls([], { ...target, buttons: [0] }));
+  it('steers toward a move-toward target and lands exactly on it', () => {
+    const context = makeContext();
+    setIntent(context, { toX: 104, toY: 100 });
     const player = spawnPlayer(context);
     for (let i = 0; i < 20; i += 1) movementSystem.update(DT, context);
     const position = context.world.getComponent(player, POSITION);
-    expect(position?.x).toBeCloseTo(target.x, 5);
-    expect(position?.y).toBeCloseTo(target.y, 5);
+    expect(position?.x).toBeCloseTo(104, 5);
+    expect(position?.y).toBeCloseTo(100, 5);
     // Arrived: further updates stay put (no orbiting or overshoot).
     movementSystem.update(DT, context);
-    expect(context.world.getComponent(player, POSITION)?.x).toBeCloseTo(target.x, 5);
+    expect(context.world.getComponent(player, POSITION)?.x).toBeCloseTo(104, 5);
   });
 
-  it('prefers keyboard steering when both keyboard and pointer are active', () => {
-    const context = makeContext(controls(['ArrowLeft'], { x: 300, y: 100, buttons: [0] }));
+  it('prefers the axis when an intent carries both axis and target', () => {
+    const context = makeContext();
+    setIntent(context, { moveX: -1, toX: 300, toY: 100 });
     const player = spawnPlayer(context);
     movementSystem.update(DT, context);
     expect(context.world.getComponent(player, POSITION)?.x).toBeLessThan(100);
   });
 
   it('clamps positions to the logical space bounds', () => {
-    const context = makeContext(controls(['ArrowRight']));
+    const context = makeContext();
+    setIntent(context, { moveX: 1 });
     const player = spawnPlayer(context, LOGICAL_SPACE.width - 0.1, 100);
     for (let i = 0; i < 10; i += 1) movementSystem.update(DT, context);
     expect(context.world.getComponent(player, POSITION)?.x).toBe(LOGICAL_SPACE.width);
   });
 
   it('publishes movement started/stopped transitions as deferred events', () => {
-    const context = makeContext(controls(['ArrowRight']));
+    const context = makeContext();
+    setIntent(context, { moveX: 1 });
     const player = spawnPlayer(context);
     const started: number[] = [];
     const stopped: number[] = [];
@@ -125,28 +122,17 @@ describe('movementSystem', () => {
     context.events.flushDeferred();
     expect(started).toEqual([player]);
 
-    context.setInput(controls([]));
+    setIntent(context, {});
     movementSystem.update(DT, context);
     context.events.flushDeferred();
     expect(stopped).toEqual([player]);
     expect(context.world.getComponent(player, MOTION)?.moving).toBe(false);
   });
 
-  it('tolerates malformed input payloads without moving or throwing', () => {
-    for (const payload of [{}, null, 42, { keys: 'nope', pointer: 'nope' }] as ComponentData[]) {
-      const context = makeContext(payload);
-      const player = spawnPlayer(context);
-      expect(() => movementSystem.update(DT, context)).not.toThrow();
-      expect(context.world.getComponent(player, POSITION)).toEqual({ x: 100, y: 100 });
-    }
-  });
-});
-
-describe('readControls', () => {
-  it('narrows a well-formed payload and defaults every malformed field', () => {
-    expect(readControls({ keys: ['KeyA', 3], pointer: { x: 1, y: 2, buttons: [0, 'x'] } })).toEqual(
-      { keys: ['KeyA'], pointer: { x: 1, y: 2, buttons: [0] } },
-    );
-    expect(readControls(null)).toEqual({ keys: [], pointer: { x: 0, y: 0, buttons: [] } });
+  it('rests when no Input System owns an intent slice (FR-ARCH-008)', () => {
+    const context = makeContext();
+    const player = spawnPlayer(context);
+    expect(() => movementSystem.update(DT, context)).not.toThrow();
+    expect(context.world.getComponent(player, POSITION)).toEqual({ x: 100, y: 100 });
   });
 });
