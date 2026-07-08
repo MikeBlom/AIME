@@ -67,12 +67,31 @@ export interface InputDevice {
 }
 
 /**
- * Audio output. A stub until the Audio System lands (Phase 1): the contract
- * is fixed now so Systems written against it never change when real mixing
- * arrives. `soundRef` is an asset id from the content pack.
+ * Per-cue playback parameters — the Audio System's spatialization hook:
+ * it computes these from world state (emitter position vs. the camera) and
+ * the backend applies them however its mixer can.
+ */
+export interface AudioPlayOptions {
+  /** Linear cue gain in [0, 1], multiplied under the master volume. Default 1. */
+  readonly gain?: number;
+  /** Stereo pan in [-1, 1], left to right. Default 0 (center). */
+  readonly pan?: number;
+}
+
+/**
+ * Audio output: fire-and-forget one-shot cues plus named looping channels
+ * (the Audio System uses `ambient` and `music` buses). `soundRef` is an
+ * asset address resolved from the content pack's manifest — never a career
+ * fact. A ref the backend cannot decode stays silent rather than faulting
+ * (FR-ARCH-008).
  */
 export interface AudioOutput {
-  play(soundRef: string): void;
+  play(soundRef: string, options?: AudioPlayOptions): void;
+  /**
+   * Set or replace the looping bed on a named channel; `null` stops the
+   * channel. Re-setting the same ref only retunes its gain.
+   */
+  setLoop(channel: string, soundRef: string | null, options?: { readonly gain?: number }): void;
   /** Master volume in [0, 1]. */
   setMasterVolume(level: number): void;
 }

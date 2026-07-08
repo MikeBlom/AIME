@@ -36,9 +36,20 @@ export interface HeadlessInputDevice extends InputDevice {
   setButton(button: number, down: boolean): void;
 }
 
+/** One recorded one-shot cue with its resolved playback parameters. */
+export type AudioPlayCall = {
+  readonly soundRef: string;
+  readonly gain: number;
+  readonly pan: number;
+};
+
 export interface HeadlessAudioOutput extends AudioOutput {
-  /** Every `play` call, in order. */
+  /** Every `play` call's soundRef, in order. */
   readonly played: readonly string[];
+  /** Every `play` call with its gain/pan, in order. */
+  readonly playCalls: readonly AudioPlayCall[];
+  /** Currently looping channels: channel → { soundRef, gain }. */
+  readonly loops: Readonly<Record<string, { readonly soundRef: string; readonly gain: number }>>;
   /** Last value passed to `setMasterVolume`, clamped to [0, 1]. */
   readonly masterVolume: number;
 }
@@ -118,15 +129,31 @@ function createInputDevice(): HeadlessInputDevice {
 }
 
 function createAudioOutput(): HeadlessAudioOutput {
-  const played: string[] = [];
+  const playCalls: AudioPlayCall[] = [];
+  const loops = new Map<string, { soundRef: string; gain: number }>();
   let masterVolume = 1;
   return {
-    play: (soundRef) => played.push(soundRef),
+    play: (soundRef, options) => {
+      playCalls.push({ soundRef, gain: options?.gain ?? 1, pan: options?.pan ?? 0 });
+    },
+    setLoop: (channel, soundRef, options) => {
+      if (soundRef === null) {
+        loops.delete(channel);
+      } else {
+        loops.set(channel, { soundRef, gain: options?.gain ?? 1 });
+      }
+    },
     setMasterVolume: (level) => {
       masterVolume = Math.min(1, Math.max(0, level));
     },
     get played() {
-      return played.slice();
+      return playCalls.map((call) => call.soundRef);
+    },
+    get playCalls() {
+      return playCalls.slice();
+    },
+    get loops() {
+      return Object.fromEntries(loops);
     },
     get masterVolume() {
       return masterVolume;

@@ -7,6 +7,17 @@
 export const LAYER = 'systems';
 
 export {
+  ambientBedCandidates,
+  AUDIO_CONTROL,
+  AUDIO_SETTINGS,
+  createAudioPlugin,
+  createAudioSystem,
+  DEFAULT_AUDIO_SETTINGS,
+  musicCandidates,
+  TIME_PHASE_CHANGED,
+} from './audio';
+export type { AudioSettings } from './audio';
+export {
   activeBindings,
   DEFAULT_BINDINGS,
   INPUT_BINDINGS,

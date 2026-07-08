@@ -11,6 +11,7 @@ import type { PackFiles, ResolvedContentGraph } from '../content';
 import { loadPack } from '../content';
 import type { Platform } from '../platform';
 import {
+  createAudioPlugin,
   inputPlugin,
   movementPlugin,
   pointerToLogical,
@@ -63,6 +64,7 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
   registry.register(inputPlugin);
   registry.register(movementPlugin);
   registry.register(renderPlugin);
+  registry.register(createAudioPlugin());
 
   const world = new EntityStore();
   const events = new EventBus({ logEnabled: true });

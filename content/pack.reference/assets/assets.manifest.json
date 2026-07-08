@@ -3,6 +3,13 @@
   "schemaVersion": "1.0.0",
   "id": "assets.manifest",
   "entries": {
-    "asset.npc.foreman": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAMCAYAAABfnvydAAAAHElEQVR4nGOYVuH2Hx9moFzByRVZ//HhUQUQDACLigUoKZ9hSwAAAABJRU5ErkJggg=="
+    "asset.npc.foreman": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAMCAYAAABfnvydAAAAHElEQVR4nGOYVuH2Hx9moFzByRVZ//HhUQUQDACLigUoKZ9hSwAAAABJRU5ErkJggg==",
+    "audio.cue.movement-started": "assets/audio/placeholder-move-start.ogg",
+    "audio.cue.movement-stopped": "assets/audio/placeholder-move-stop.ogg",
+    "audio.cue.region-entered": "assets/audio/placeholder-region-enter.ogg",
+    "audio.ambient.region.arrival.offline": "assets/audio/placeholder-ambient-offline.ogg",
+    "audio.ambient.region.arrival.online": "assets/audio/placeholder-ambient-online.ogg",
+    "audio.ambient.default": "assets/audio/placeholder-ambient.ogg",
+    "audio.music.default": "assets/audio/placeholder-music.ogg"
   }
 }
