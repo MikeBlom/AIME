@@ -99,7 +99,7 @@ export function spawnWorld(world: EntityStore, graph: ResolvedContentGraph): Spa
   world.addComponent(manifest, ASSET_MANIFEST, { entries: manifestEntries });
 
   // Default view: a zoom-1 camera on the region center — the whole-space
-  // fit — until a camera System takes ownership in a later issue.
+  // fit. The Camera System adopts this entity at init and owns the slice.
   const camera = world.createEntity();
   world.addComponent(camera, CAMERA, {
     x: LOGICAL_SPACE.width / 2,

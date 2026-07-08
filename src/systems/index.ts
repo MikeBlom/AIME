@@ -18,6 +18,17 @@ export {
 } from './audio';
 export type { AudioSettings } from './audio';
 export {
+  CAMERA_FOLLOW,
+  CAMERA_ZOOM_REQUESTED,
+  clampToRegionExtents,
+  createCameraPlugin,
+  createCameraSystem,
+  DEFAULT_CAMERA_FOLLOW,
+  ZOOM_MAX,
+  ZOOM_MIN,
+} from './camera';
+export type { CameraFollow } from './camera';
+export {
   activeBindings,
   DEFAULT_BINDINGS,
   INPUT_BINDINGS,
