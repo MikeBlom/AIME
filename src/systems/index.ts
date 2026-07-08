@@ -6,6 +6,17 @@
  */
 export const LAYER = 'systems';
 
+export {
+  activeBindings,
+  DEFAULT_BINDINGS,
+  INPUT_BINDINGS,
+  INPUT_INTENT,
+  INTENT_INTERACT,
+  INTENT_MOVE,
+  inputPlugin,
+  inputSystem,
+} from './input';
+export type { BindingTable, InputBindings, InputIntent } from './input';
 export { movementPlugin, movementSystem } from './movement';
 export {
   ASSET_MANIFEST,

@@ -1,22 +1,21 @@
 /**
- * Movement System — drives player-controlled entities from the per-frame
- * input snapshot, through the fixed-step loop (issue #15's "controllable
- * entity" deliverable).
+ * Movement System — drives player-controlled entities from the Input
+ * System's intent slice, through the fixed-step loop (issue #15; intent
+ * consumption per issue #17).
  *
- * Conforms to the System lifecycle (FR-ARCH-005..008): it reads the Context's
- * input boundary and world state, writes only the slices it owns (position
- * and motion, FR-ARCH-015), and announces start/stop transitions as deferred
- * events (FR-ARCH-012) — it never references another System. Update is pure
- * with respect to (world state, dt, input): no wall clock, no unseeded
- * randomness (NFR-ARCH-001), so a recorded session replays identically
+ * Conforms to the System lifecycle (FR-ARCH-005..008): it reads the
+ * INPUT_INTENT world-state slice — never raw keys or pointers — and writes
+ * only the slices it owns (position and motion, FR-ARCH-015), announcing
+ * start/stop transitions as deferred events (FR-ARCH-012). Its `input`
+ * dependency is ordering only: with no Input System registered the intent
+ * slice is simply absent and the entity rests (FR-ARCH-008). Update is
+ * pure with respect to (world state, dt): no wall clock, no unseeded
+ * randomness (NFR-ARCH-001), so recorded sessions replay identically
  * (FR-ARCH-025).
- *
- * Controls: arrow keys / WASD move directly (keyboard, NFR-VIS-003); a held
- * primary button or touch steers toward the pointer's logical position
- * (touch, NFR-VIS-004). Keyboard wins when both are active.
  */
-import type { Plugin, System, SystemContext } from '../core';
-import type { ControlSnapshot } from './scene';
+import type { EntityStore, Plugin, System, SystemContext } from '../core';
+import { INPUT_INTENT } from './input';
+import type { InputIntent } from './input';
 import {
   LOGICAL_SPACE,
   MOTION,
@@ -24,57 +23,41 @@ import {
   MOVEMENT_STOPPED,
   PLAYER_CONTROLLED,
   POSITION,
-  readControls,
 } from './scene';
 
-/** Key codes that steer, mapped to axis contributions. */
-const KEY_AXES: ReadonlyMap<string, { readonly x: number; readonly y: number }> = new Map([
-  ['ArrowLeft', { x: -1, y: 0 }],
-  ['KeyA', { x: -1, y: 0 }],
-  ['ArrowRight', { x: 1, y: 0 }],
-  ['KeyD', { x: 1, y: 0 }],
-  ['ArrowUp', { x: 0, y: -1 }],
-  ['KeyW', { x: 0, y: -1 }],
-  ['ArrowDown', { x: 0, y: 1 }],
-  ['KeyS', { x: 0, y: 1 }],
-]);
-
-/** Pointer steering stops within this many logical units of the target. */
+/** Move-toward targets count as reached within this many logical units. */
 const ARRIVAL_EPSILON = 0.5;
-
-function keyboardDirection(controls: ControlSnapshot): { x: number; y: number } {
-  let x = 0;
-  let y = 0;
-  for (const key of controls.keys) {
-    const axis = KEY_AXES.get(key);
-    if (axis !== undefined) {
-      x += axis.x;
-      y += axis.y;
-    }
-  }
-  return { x: Math.sign(x), y: Math.sign(y) };
-}
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
+/** The world's current intent, idle when no Input System owns the slice. */
+function activeIntent(world: EntityStore): InputIntent {
+  for (const entity of world.query(INPUT_INTENT)) {
+    const intent = world.getComponent(entity, INPUT_INTENT);
+    if (intent !== undefined) return intent;
+  }
+  return { moveX: 0, moveY: 0, toX: null, toY: null, interact: false };
+}
+
 export const movementSystem: System = {
   id: 'movement',
-  dependencies: [],
+  // Ordering only: consume the intent the Input System resolved this step.
+  dependencies: ['input'],
   init() {},
   update(dt: number, context: SystemContext): void {
-    const controls = readControls(context.input.current);
+    const intent = activeIntent(context.world);
     for (const entity of context.world.query(POSITION, PLAYER_CONTROLLED)) {
       const position = context.world.getComponent(entity, POSITION);
       const control = context.world.getComponent(entity, PLAYER_CONTROLLED);
       if (position === undefined || control === undefined) continue;
 
-      let direction = keyboardDirection(controls);
+      let direction = { x: Math.sign(intent.moveX), y: Math.sign(intent.moveY) };
       let stepLength = control.speed * dt;
-      if (direction.x === 0 && direction.y === 0 && controls.pointer.buttons.includes(0)) {
-        // Touch/pointer steering: head toward the held pointer's logical
-        // position, landing exactly on arrival so the entity never orbits.
-        const dx = controls.pointer.x - position.x;
-        const dy = controls.pointer.y - position.y;
+      if (direction.x === 0 && direction.y === 0 && intent.toX !== null && intent.toY !== null) {
+        // Move-toward intent (touch/pointer): head for the target, landing
+        // exactly on arrival so the entity never orbits it.
+        const dx = intent.toX - position.x;
+        const dy = intent.toY - position.y;
         // sqrt is IEEE-correctly-rounded (hypot is not), keeping simulation
         // arithmetic reproducible across hosts (NFR-ARCH-001).
         const distance = Math.sqrt(dx * dx + dy * dy);
@@ -83,7 +66,7 @@ export const movementSystem: System = {
           stepLength = Math.min(stepLength, distance);
         }
       } else if (direction.x !== 0 && direction.y !== 0) {
-        // Normalize diagonals so keyboard speed is direction-independent.
+        // Normalize diagonals so axis speed is direction-independent.
         const scale = Math.SQRT1_2;
         direction = { x: direction.x * scale, y: direction.y * scale };
       }
