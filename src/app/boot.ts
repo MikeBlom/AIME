@@ -15,7 +15,9 @@ import {
   createAnimationPlugin,
   createAudioPlugin,
   createCameraPlugin,
+  createUiPlugin,
   inputPlugin,
+  uiFrame,
   movementPlugin,
   pointerToLogical,
   renderFrame,
@@ -69,6 +71,7 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
   registry.register(createAnimationPlugin());
   registry.register(createCameraPlugin());
   registry.register(renderPlugin);
+  registry.register(createUiPlugin());
   registry.register(createAudioPlugin());
 
   const world = new EntityStore();
@@ -106,9 +109,10 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
         };
       },
       // Presentation order per docs/02: animation interpolates its pose,
-      // then rendering draws it.
+      // rendering draws the world, then UI draws above it.
       onPresent: (alpha: number, context: SystemContext) => {
         renderFrame(alpha, context, platform.render, animationPoses(alpha, context));
+        uiFrame(context, platform.render);
         options.onOverlayText?.(formatDebugOverlay(buildDebugSnapshot(loop, registry, events)));
       },
       monotonicNowMs: () => platform.timers.monotonicNowMs(),

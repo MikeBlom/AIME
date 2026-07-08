@@ -15,6 +15,7 @@
     "metaphor.distributed-systems.framing": "PLACEHOLDER fiction framing of the accomplishment",
     "achievement.first-light.title": "PLACEHOLDER First Light",
     "achievement.first-light.description": "PLACEHOLDER awarded for the first restoration",
-    "minigame.route-and-balance.name": "PLACEHOLDER Route and Balance"
+    "minigame.route-and-balance.name": "PLACEHOLDER Route and Balance",
+    "ui.prompt.interact": "PLACEHOLDER Press E or tap to interact"
   }
 }
