@@ -8,7 +8,5 @@ export type { BootWorldOptions, WorldHandle } from './boot';
 export { buildDebugSnapshot, formatDebugOverlay } from './debug';
 export type { DebugEventEntry, DebugSnapshot } from './debug';
 export { packFilesFromBundle } from './pack-bundle';
-export { pointerToLogical, present, surfaceTransform } from './present';
-export type { SurfaceTransform } from './present';
 export { spawnWorld } from './spawn';
 export type { SpawnedWorld } from './spawn';

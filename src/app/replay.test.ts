@@ -9,11 +9,10 @@
 import { describe, expect, it } from 'vitest';
 import type { HeadlessPlatform } from '../platform';
 import { createHeadlessPlatform } from '../platform';
-import { POSITION } from '../systems';
+import { pointerToLogical, POSITION } from '../systems';
 import type { WorldHandle } from './boot';
 import { bootWorld } from './boot';
 import { packFilesFromBundle } from './pack-bundle';
-import { pointerToLogical } from './present';
 
 const DT = 1 / 60;
 const SEED = 20260708;

@@ -8,11 +8,23 @@ export const LAYER = 'systems';
 
 export { movementPlugin, movementSystem } from './movement';
 export {
+  ASSET_MANIFEST,
+  CAMERA,
+  RENDER_MOTION,
+  renderFrame,
+  renderPlugin,
+  renderSystem,
+  viewTransform,
+} from './render';
+export type { AssetManifest, Camera, RenderMotion } from './render';
+export {
+  fitTransform,
   LOGICAL_SPACE,
   MOTION,
   MOVEMENT_STARTED,
   MOVEMENT_STOPPED,
   PLAYER_CONTROLLED,
+  pointerToLogical,
   POSITION,
   REGION,
   REGION_ENTERED,

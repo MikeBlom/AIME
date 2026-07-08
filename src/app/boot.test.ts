@@ -55,8 +55,12 @@ describe('bootWorld', () => {
     const commands = platform.render.commands;
     expect(commands[0]).toMatchObject({ op: 'clear' });
     const rects = commands.filter((command) => command['op'] === 'fillRect');
-    // Region background + building marker + npc marker + player.
-    expect(rects.length).toBeGreaterThanOrEqual(4);
+    // Region background + building marker + player.
+    expect(rects.length).toBeGreaterThanOrEqual(3);
+    // The NPC marker declares an appearance asset, resolved through the
+    // pack's manifest into a sprite draw.
+    const sprites = commands.filter((command) => command['op'] === 'drawSprite');
+    expect(sprites.length).toBeGreaterThanOrEqual(1);
   });
 
   it('announces the entered region through the event bus on the first step', () => {

@@ -458,11 +458,46 @@ const STRINGS: ContentTypeSpec = {
   },
 };
 
+/**
+ * The asset manifest (DATA-FR-019): asset id → address (a pack-relative
+ * path, URL, or data URI). Large assets are referenced here and loaded off
+ * the critical path; rendering resolves sprite refs through these entries.
+ */
+const ASSETS: ContentTypeSpec = {
+  schemaType: 'assets',
+  schemaVersion: '1.0.0',
+  schema: base('assets', 'assets', {
+    required: ['entries'],
+    properties: {
+      entries: {
+        type: 'object',
+        description: 'asset id -> address (path, URL, or data URI); addresses are data, not code',
+      },
+    },
+  }),
+  example: {
+    schemaType: 'assets',
+    schemaVersion: '1.0.0',
+    id: 'assets.manifest',
+    entries: { 'asset.npc.placeholder': 'assets/sprites/placeholder.png' },
+  },
+};
+
 /** The published catalog, keyed by `schemaType` (DATA-FR-003). */
 export const CONTENT_SCHEMAS: ReadonlyMap<string, ContentTypeSpec> = new Map(
-  [PACK, REGION, BUILDING, NPC, QUEST, DIALOGUE, METAPHOR, ACHIEVEMENT, MINIGAME, STRINGS].map(
-    (spec) => [spec.schemaType, spec],
-  ),
+  [
+    PACK,
+    REGION,
+    BUILDING,
+    NPC,
+    QUEST,
+    DIALOGUE,
+    METAPHOR,
+    ACHIEVEMENT,
+    MINIGAME,
+    STRINGS,
+    ASSETS,
+  ].map((spec) => [spec.schemaType, spec]),
 );
 
 /**
