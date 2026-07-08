@@ -8,7 +8,15 @@
       "Bash(gh label *)",
       "Bash(gh auth status)",
       "Bash(git *)",
-      "Bash(python3 scripts/*)"
+      "Bash(python3 scripts/*)",
+      "Bash(npm run *)",
+      "Bash(npm ci)",
+      "Bash(npm install *)",
+      "Bash(npm test)",
+      "Bash(npx vitest *)",
+      "Bash(npx eslint *)",
+      "Bash(npx prettier *)",
+      "Bash(npx tsc *)"
     ]
   }
 }
