@@ -16,7 +16,7 @@
  * It holds no reference to any other System; its `movement` dependency is
  * ordering only and is tolerated absent (FR-ARCH-008).
  */
-import type { EntityStore, Plugin, System, SystemContext } from '../core';
+import type { EntityId, EntityStore, Plugin, System, SystemContext } from '../core';
 import { defineComponentType } from '../core';
 import type { RenderSurface } from '../platform';
 import type { Position, Renderable } from './scene';
@@ -141,9 +141,17 @@ function drawPosition(
  * Renderable in stable layer order (layer ascending, insertion order as
  * the tiebreak), each at its interpolated position, as a sprite when its
  * `spriteRef` resolves through the asset manifest and as a kind-colored
- * rect otherwise. Reads only world state and the surface.
+ * rect otherwise. Reads only world state and the surface. An optional
+ * `poses` map (the Animation System's presentation output, handed over by
+ * the composition root) overrides an entity's sprite ref for this frame;
+ * rendering tolerates its absence entirely (FR-ARCH-008).
  */
-export function renderFrame(alpha: number, context: SystemContext, render: RenderSurface): void {
+export function renderFrame(
+  alpha: number,
+  context: SystemContext,
+  render: RenderSurface,
+  poses?: ReadonlyMap<EntityId, string>,
+): void {
   const world = context.world;
   const { scale, offsetX, offsetY } = viewTransform(render.size(), activeCamera(world));
 
@@ -184,25 +192,33 @@ export function renderFrame(alpha: number, context: SystemContext, render: Rende
   const drawables = world
     .query(POSITION, RENDERABLE)
     .map((entity) => ({
+      entity,
       position: world.getComponent(entity, POSITION),
       renderable: world.getComponent(entity, RENDERABLE),
       motion: world.getComponent(entity, RENDER_MOTION),
     }))
     .filter(
-      (d): d is { position: Position; renderable: Renderable; motion: RenderMotion | undefined } =>
-        d.position !== undefined && d.renderable !== undefined,
+      (
+        d,
+      ): d is {
+        entity: EntityId;
+        position: Position;
+        renderable: Renderable;
+        motion: RenderMotion | undefined;
+      } => d.position !== undefined && d.renderable !== undefined,
     )
     // Array.sort is stable: equal layers keep world insertion order, so
     // layering never flickers between frames.
     .sort((a, b) => layerOf(a.renderable) - layerOf(b.renderable));
 
-  for (const { position, renderable, motion } of drawables) {
+  for (const { entity, position, renderable, motion } of drawables) {
     const at = drawPosition(position, motion, alpha);
     const x = offsetX + (at.x - renderable.width / 2) * scale;
     const y = offsetY + (at.y - renderable.height / 2) * scale;
     const width = renderable.width * scale;
     const height = renderable.height * scale;
-    const address = renderable.spriteRef === undefined ? undefined : manifest[renderable.spriteRef];
+    const spriteRef = poses?.get(entity) ?? renderable.spriteRef;
+    const address = spriteRef === undefined ? undefined : manifest[spriteRef];
     if (address !== undefined) {
       render.drawSprite(address, x, y, width, height);
     } else {

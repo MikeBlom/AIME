@@ -11,6 +11,8 @@ import type { PackFiles, ResolvedContentGraph } from '../content';
 import { loadPack } from '../content';
 import type { Platform } from '../platform';
 import {
+  animationPoses,
+  createAnimationPlugin,
   createAudioPlugin,
   createCameraPlugin,
   inputPlugin,
@@ -64,6 +66,7 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
   registry.register(scenePlugin);
   registry.register(inputPlugin);
   registry.register(movementPlugin);
+  registry.register(createAnimationPlugin());
   registry.register(createCameraPlugin());
   registry.register(renderPlugin);
   registry.register(createAudioPlugin());
@@ -102,8 +105,10 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
           pointer: { x: pointer.x, y: pointer.y, buttons: snapshot.pointer.buttons },
         };
       },
+      // Presentation order per docs/02: animation interpolates its pose,
+      // then rendering draws it.
       onPresent: (alpha: number, context: SystemContext) => {
-        renderFrame(alpha, context, platform.render);
+        renderFrame(alpha, context, platform.render, animationPoses(alpha, context));
         options.onOverlayText?.(formatDebugOverlay(buildDebugSnapshot(loop, registry, events)));
       },
       monotonicNowMs: () => platform.timers.monotonicNowMs(),
