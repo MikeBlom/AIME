@@ -16,6 +16,9 @@
  */
 import type { ComponentData, ComponentType, EntityStore } from './entity-store';
 import type { EventPayload, EventType, EventBus } from './event-bus';
+import type { InputSnapshotBoundary } from './runtime-loop';
+import type { RngService } from './rng';
+import type { TimeService } from './time';
 
 /**
  * Schedules long-running work (asset loads, content parsing) off the
@@ -44,6 +47,12 @@ export interface SystemContext {
   readonly events: EventBus;
   readonly scheduler: Scheduler;
   readonly platform: PlatformInterfaces;
+  /** Simulation time — Systems read this, never a wall clock (NFR-ARCH-001). */
+  readonly time: TimeService;
+  /** Seedable randomness — the only randomness simulation code may use (NFR-ARCH-001). */
+  readonly rng: RngService;
+  /** This frame's immutable input snapshot (FR-ARCH-023). */
+  readonly input: InputSnapshotBoundary;
 }
 
 /**

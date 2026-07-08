@@ -23,6 +23,21 @@ export type {
   SystemContext,
 } from './registry';
 
+export { RuntimeLoop } from './runtime-loop';
+export type {
+  ContextSeed,
+  FrameTicker,
+  InputSnapshotBoundary,
+  Recording,
+  RuntimeLoopOptions,
+  SystemFault,
+  SystemTiming,
+} from './runtime-loop';
+
+export { TimeService } from './time';
+export { RngService } from './rng';
+export { deepFreeze } from './freeze';
+
 export { EventBus, defineEventType } from './event-bus';
 export type {
   Delivery,
