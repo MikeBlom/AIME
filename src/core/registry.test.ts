@@ -176,6 +176,18 @@ describe('plugin bundles (FR-ARCH-018..020)', () => {
     expect(registry.order.map((s) => s.id)).toEqual(['sys.taken']);
     expect(registry.componentTypes.has('plugin.minigame.fuel')).toBe(false);
   });
+
+  it('rejects a plugin whose bundle lists one System id twice, admitting nothing from it', () => {
+    const registry = new ModuleRegistry();
+    const calls: string[] = [];
+    expect(() =>
+      registry.register({
+        id: 'plugin.doubled',
+        systems: [makeSystem('sys.twin', [], calls), makeSystem('sys.twin', [], calls)],
+      }),
+    ).toThrowError(/plugin "plugin\.doubled" redefines System id "sys\.twin"/);
+    expect(registry.order).toEqual([]);
+  });
 });
 
 describe('declarative manifest loading (FR-ARCH-017)', () => {
@@ -198,6 +210,16 @@ describe('declarative manifest loading (FR-ARCH-017)', () => {
     expect(() =>
       registry.loadManifest({ modules: ['sys.input', 'sys.ghost'] }, catalog),
     ).toThrowError(/unknown module\(s\) "sys\.ghost"/);
+    expect(registry.order).toEqual([]);
+  });
+
+  it('rejects a manifest naming a module twice without applying any of it', () => {
+    const registry = new ModuleRegistry();
+    const calls: string[] = [];
+    const catalog = new Map<string, Module>([['sys.input', makeSystem('sys.input', [], calls)]]);
+    expect(() =>
+      registry.loadManifest({ modules: ['sys.input', 'sys.input'] }, catalog),
+    ).toThrowError(/"sys\.input" more than once/);
     expect(registry.order).toEqual([]);
   });
 });

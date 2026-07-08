@@ -138,6 +138,12 @@ export class ModuleRegistry {
           `known: ${[...catalog.keys()].map((id) => `"${id}"`).join(', ') || '(none)'}`,
       );
     }
+    const repeated = manifest.modules.filter((id, index) => manifest.modules.indexOf(id) < index);
+    if (repeated.length > 0) {
+      throw new Error(
+        `manifest names module(s) ${repeated.map((id) => `"${id}"`).join(', ')} more than once`,
+      );
+    }
     for (const id of manifest.modules) this.register(catalog.get(id) as Module);
   }
 
@@ -194,12 +200,14 @@ export class ModuleRegistry {
     }
     // Validate the whole bundle before admitting any of it, so a bad plugin
     // is rejected as a unit and never half-applied (FR-ARCH-020).
+    const bundleIds = new Set<string>();
     for (const system of plugin.systems) {
-      if (this.#systems.has(system.id)) {
+      if (this.#systems.has(system.id) || bundleIds.has(system.id)) {
         throw new Error(
           `plugin "${plugin.id}" redefines System id "${system.id}"; System ids must be unique`,
         );
       }
+      bundleIds.add(system.id);
     }
     for (const type of plugin.componentTypes ?? []) {
       const known = this.#componentTypes.get(type.id);
