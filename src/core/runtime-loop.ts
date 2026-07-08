@@ -79,6 +79,9 @@ export interface RuntimeLoopOptions {
 
 const DEFAULT_MAX_STEPS_PER_FRAME = 5;
 
+/** Fault-log bound: a crash-looping System must not leak memory (FR-ARCH-029). */
+const MAX_RETAINED_FAULTS = 1000;
+
 /** The world-state/services half of a Context; the loop adds time, rng, and input. */
 export type ContextSeed = Omit<SystemContext, 'time' | 'rng' | 'input'>;
 
@@ -267,6 +270,7 @@ export class RuntimeLoop {
           error,
         };
         this.#faults.push(fault);
+        if (this.#faults.length > MAX_RETAINED_FAULTS) this.#faults.shift();
         this.#options.onFault?.(fault);
       }
       timings.push({ systemId: system.id, milliseconds: (probe?.() ?? 0) - before });

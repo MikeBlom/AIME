@@ -220,6 +220,23 @@ describe('fault isolation (FR-ARCH-029)', () => {
     expect(loop.faults[0]).toMatchObject({ systemId: 'sys.faulty', step: 0, frame: 0 });
     expect((loop.faults[0]?.error as Error).message).toBe('injected fault');
   });
+
+  it('bounds the fault log so a crash-looping System cannot leak memory', () => {
+    const registry = new ModuleRegistry();
+    registry.register({
+      id: 'sys.crashloop',
+      dependencies: [],
+      init: () => undefined,
+      update: () => {
+        throw new Error('always');
+      },
+      teardown: () => undefined,
+    });
+    const { loop } = makeLoop(registry);
+    for (let i = 0; i < 1100; i += 1) loop.frame(FIXED_DT);
+    expect(loop.faults).toHaveLength(1000);
+    expect(loop.faults[0]?.step).toBe(100); // oldest entries dropped first
+  });
 });
 
 describe('immutable input snapshot boundary (FR-ARCH-023)', () => {
