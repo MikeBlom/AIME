@@ -7,6 +7,22 @@
 export const LAYER = 'systems';
 
 export {
+  ANIMATABLE,
+  ANIMATION,
+  ANIMATION_ONE_SHOT,
+  animationPoses,
+  CLIP_IDLE,
+  CLIP_INTERACT,
+  CLIP_WALK,
+  createAnimationPlugin,
+  createAnimationSystem,
+  DEFAULT_ANIMATION_FPS,
+  DEFAULT_ONE_SHOT_SECONDS,
+  facingDirection,
+  resolveClipFrame,
+} from './animation';
+export type { Animatable, AnimationState, OneShotState } from './animation';
+export {
   ambientBedCandidates,
   AUDIO_CONTROL,
   AUDIO_SETTINGS,
