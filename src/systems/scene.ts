@@ -20,13 +20,42 @@ export const LOGICAL_SPACE = { width: 320, height: 180 } as const;
 export type Position = { readonly x: number; readonly y: number };
 export const POSITION = defineComponentType<Position>('position');
 
-/** Marks the entity the player drives; `speed` is logical units per second. */
-export type PlayerControlled = { readonly speed: number };
+/**
+ * Marks the entity the player drives. `speed` is the top speed in logical
+ * units per second; `acceleration`/`friction` (logical units per second
+ * squared) tune how motion ramps up and coasts to rest — engine defaults
+ * apply when absent, so tuning is world data, never code.
+ */
+export type PlayerControlled = {
+  readonly speed: number;
+  readonly acceleration?: number;
+  readonly friction?: number;
+};
 export const PLAYER_CONTROLLED = defineComponentType<PlayerControlled>('player-controlled');
 
-/** Movement state owned by the movement System (FR-ARCH-015). */
-export type Motion = { readonly moving: boolean };
+/**
+ * Motion state owned by the movement System (FR-ARCH-015): whether the
+ * entity is in motion, its velocity in logical units per second, and its
+ * unit facing — held from the last motion so animation and camera
+ * consumers always have a direction to point at.
+ */
+export type Motion = {
+  readonly moving: boolean;
+  readonly velocityX: number;
+  readonly velocityY: number;
+  readonly facingX: number;
+  readonly facingY: number;
+};
 export const MOTION = defineComponentType<Motion>('motion');
+
+/** At rest, facing the viewer (south) — the deterministic starting pose. */
+export const IDLE_MOTION: Motion = {
+  moving: false,
+  velocityX: 0,
+  velocityY: 0,
+  facingX: 0,
+  facingY: 1,
+};
 
 /**
  * How rendering draws an entity. `kind` is a generic scene role
