@@ -1,0 +1,15 @@
+{
+  "schemaType": "quest",
+  "schemaVersion": "1.0.0",
+  "id": "quest.restore-power",
+  "titleKey": "quest.restore-power.title",
+  "regionRef": "region.arrival",
+  "metaphorRef": "metaphor.distributed-systems",
+  "objectives": [{ "id": "obj.route-power", "descriptionKey": "quest.restore-power.obj.route" }],
+  "onComplete": {
+    "emits": ["SystemRestored"],
+    "revealsKey": "quest.restore-power.reveal",
+    "worldEffect": "PLACEHOLDER region.arrival -> online"
+  },
+  "bypass": { "allowed": true, "revealsKey": "quest.restore-power.reveal" }
+}

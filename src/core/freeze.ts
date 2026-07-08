@@ -3,7 +3,7 @@
  * per-frame input snapshots (FR-ARCH-023) are immutable by contract; this is
  * the one shared enforcement point.
  */
-import type { ComponentData } from './entity-store';
+import type { ComponentData } from './entity-store.js';
 
 /** Recursively freeze a value so no consumer can mutate it. */
 export function deepFreeze<T extends ComponentData>(value: T): T {

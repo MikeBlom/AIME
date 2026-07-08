@@ -9,3 +9,6 @@ coverage/
 .DS_Store
 __pycache__/
 *.pyc
+
+# Content pipeline CLI build output (tsconfig.content.json)
+dist-content/

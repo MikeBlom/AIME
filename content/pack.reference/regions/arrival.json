@@ -1,0 +1,14 @@
+{
+  "schemaType": "region",
+  "schemaVersion": "1.0.0",
+  "id": "region.arrival",
+  "displayNameKey": "region.arrival.name",
+  "state": { "initial": "offline" },
+  "bounds": { "note": "PLACEHOLDER spatial description consumed by World Design" },
+  "contains": {
+    "buildings": ["building.control-house"],
+    "npcs": ["npc.foreman"],
+    "quests": ["quest.restore-power"]
+  },
+  "ambient": { "weatherProfile": "temperate", "dayNight": true }
+}

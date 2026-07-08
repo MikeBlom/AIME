@@ -1,0 +1,13 @@
+{
+  "schemaType": "npc",
+  "schemaVersion": "1.0.0",
+  "id": "npc.foreman",
+  "displayNameKey": "npc.foreman.name",
+  "appearance": { "assetRef": "asset.npc.foreman" },
+  "routine": [
+    { "phase": "day", "activity": "PLACEHOLDER patrol path or task" },
+    { "phase": "night", "activity": "PLACEHOLDER rest location" }
+  ],
+  "dialogueRef": "dialogue.foreman-intro",
+  "role": "PLACEHOLDER narrative role, e.g. guide to the first restoration"
+}

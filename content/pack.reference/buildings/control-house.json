@@ -1,0 +1,7 @@
+{
+  "schemaType": "building",
+  "schemaVersion": "1.0.0",
+  "id": "building.control-house",
+  "displayNameKey": "building.control-house.name",
+  "interior": { "note": "PLACEHOLDER interior description" }
+}

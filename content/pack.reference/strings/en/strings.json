@@ -1,0 +1,20 @@
+{
+  "schemaType": "strings",
+  "schemaVersion": "1.0.0",
+  "locale": "en",
+  "entries": {
+    "region.arrival.name": "PLACEHOLDER The Arrival Yard",
+    "building.control-house.name": "PLACEHOLDER The Control House",
+    "npc.foreman.name": "PLACEHOLDER The Foreman",
+    "quest.restore-power.title": "PLACEHOLDER Wake the Yard",
+    "quest.restore-power.obj.route": "PLACEHOLDER Route power through the yard",
+    "quest.restore-power.reveal": "PLACEHOLDER fiction-framed insight into the creator's work",
+    "dialogue.foreman-intro.n1": "PLACEHOLDER opening line from the foreman",
+    "dialogue.foreman-intro.n1.c1": "PLACEHOLDER player reply",
+    "dialogue.foreman-intro.n2": "PLACEHOLDER closing line from the foreman",
+    "metaphor.distributed-systems.framing": "PLACEHOLDER fiction framing of the accomplishment",
+    "achievement.first-light.title": "PLACEHOLDER First Light",
+    "achievement.first-light.description": "PLACEHOLDER awarded for the first restoration",
+    "minigame.route-and-balance.name": "PLACEHOLDER Route and Balance"
+  }
+}
