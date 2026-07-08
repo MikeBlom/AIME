@@ -63,20 +63,22 @@ npm run build       # typecheck (tsc --noEmit) + production build
 npm run test        # Vitest, single run
 npm run lint        # ESLint over the repo
 npm run format      # Prettier check (format:fix to write)
-npm run check       # build + test + lint + format — the full local gate
+npm run validate:content   # standalone content-pack validator (DATA-FR-013)
+npm run check:literals     # no-career-literals-in-engine check (DATA-FR-027)
+npm run check       # all of the above — the full local gate
 ```
 
-`npm run check` is the single local command that mirrors CI (the CI issue wraps exactly
-these, plus content-schema validation and the no-career-literals check as they land).
+`npm run check` is the single local command that mirrors CI exactly: the workflow in
+`.github/workflows/ci.yml` runs the same six commands, one job per check.
 
 ## Branch protection notes
 
-To be configured on `main` (documented here per the scaffold issue; wiring is the CI
-issue's deliverable):
+To be configured on `main` (the CI workflow exists; flipping protection on is a repo
+admin setting):
 
-- **Required status checks:** build, test, lint, format — i.e. the jobs wrapping
-  `npm run check` — plus, once landed, content-schema validation and the
-  no-career-literals check. PRs cannot merge red.
+- **Required status checks:** the six `ci` workflow jobs — `build`, `test`, `lint`,
+  `format`, `validate-content`, `no-career-literals` (`.github/workflows/ci.yml`). PRs
+  cannot merge red.
 - **Code owners:** `.github/CODEOWNERS` routes review to `@MikeBlom`. When a human gate is
   active (issues labeled `gate:human`), require code-owner review on those PRs.
 - **PR template:** `.github/PULL_REQUEST_TEMPLATE.md` requires an acceptance-criteria
