@@ -14,7 +14,9 @@
     "lint": "eslint .",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
-    "check": "npm run build && npm run test && npm run lint && npm run format"
+    "validate:content": "node scripts/validate-content.mjs",
+    "check:literals": "node scripts/check-career-literals.mjs",
+    "check": "npm run build && npm run test && npm run lint && npm run format && npm run validate:content && npm run check:literals"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
