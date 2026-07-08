@@ -15,8 +15,10 @@ import {
   createAnimationPlugin,
   createAudioPlugin,
   createCameraPlugin,
+  createSaveLoadPlugin,
   createUiPlugin,
   inputPlugin,
+  loadWorld,
   uiFrame,
   movementPlugin,
   pointerToLogical,
@@ -24,6 +26,8 @@ import {
   renderPlugin,
   scenePlugin,
   REGION_ENTERED,
+  WORLD_RESTORED,
+  SAVE_SLOT_KEY,
 } from '../systems';
 import type { DebugSnapshot } from './debug';
 import { buildDebugSnapshot, formatDebugOverlay } from './debug';
@@ -40,6 +44,12 @@ export interface BootWorldOptions {
   readonly seed: number;
   /** Receives the formatted debug overlay text once per presented frame. */
   readonly onOverlayText?: (text: string) => void;
+  /**
+   * Safe resume: after spawning, overlay the progression save from the
+   * platform storage when one exists and matches this pack (issue #24).
+   * Off by default so tests and replays always start from a clean spawn.
+   */
+  readonly resume?: boolean;
 }
 
 export interface WorldHandle {
@@ -70,9 +80,11 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
   registry.register(movementPlugin);
   registry.register(createAnimationPlugin());
   registry.register(createCameraPlugin());
+  const saveLoadOptions = { pack: { id: graph.packId, version: graph.packVersion } };
   registry.register(renderPlugin);
   registry.register(createUiPlugin());
   registry.register(createAudioPlugin());
+  registry.register(createSaveLoadPlugin(saveLoadOptions));
 
   const world = new EntityStore();
   const events = new EventBus({ logEnabled: true });
@@ -119,6 +131,7 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
     },
   );
 
+  let resumed = false;
   return {
     loop,
     registry,
@@ -127,6 +140,19 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
     graph,
     spawned,
     debugSnapshot: () => buildDebugSnapshot(loop, registry, events),
-    start: () => loop.run((onFrame) => platform.timers.frameTicker(onFrame)),
+    start: () => {
+      const stop = loop.run((onFrame) => platform.timers.frameTicker(onFrame));
+      // Safe resume (issue #24): overlay the stored progression save after
+      // Systems have initialized their owned slices, so saved values land
+      // on the same deterministic entity ids. A missing, foreign, or
+      // corrupt save leaves the fresh spawn untouched.
+      if (options.resume === true && !resumed) {
+        resumed = true;
+        if (loadWorld(loop.context, saveLoadOptions)) {
+          events.publish(WORLD_RESTORED, { slot: SAVE_SLOT_KEY });
+        }
+      }
+      return stop;
+    },
   };
 }

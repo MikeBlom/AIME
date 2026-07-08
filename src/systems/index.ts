@@ -91,6 +91,24 @@ export type {
   Renderable,
 } from './scene';
 export {
+  applySave,
+  AUTOSAVE_EVENTS,
+  captureSave,
+  createSaveLoadPlugin,
+  createSaveLoadSystem,
+  loadWorld,
+  migrateSave,
+  parseSave,
+  PROGRESSION_SLICES,
+  SAVE_FORMAT,
+  SAVE_SLOT_KEY,
+  SAVE_VERSION,
+  saveWorld,
+  WORLD_RESTORED,
+  WORLD_SAVED,
+} from './saveload';
+export type { SaveEnvelope, SaveLoadOptions, SaveMigration } from './saveload';
+export {
   createUiPlugin,
   createUiSystem,
   IDLE_UI_STATE,
