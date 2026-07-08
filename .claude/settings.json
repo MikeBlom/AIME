@@ -1,5 +1,9 @@
 {
-  "$comment": "Committed permission allowlist for the autonomous build loop. Kept in settings.json (not settings.local.json) so both interactive Fable sessions and the scheduled cloud routine inherit it. Anything not listed here still prompts — that is the safety margin. After issue #6 fixes the stack, APPEND the concrete build/test/lint commands (e.g. Bash(pnpm run *)) so unattended runs don't stall on prompts. See AUTOLOOP.md.",
+  "$comment": "Committed settings for the autonomous build loop; both interactive sessions and the scheduled cloud routine inherit this file. Permissions: anything not allowlisted still prompts — that is the safety margin. Attribution: empty strings disable the auto-appended Co-Authored-By commit trailer and the Generated-with footer on PRs/issue comments; this repo carries no tool attribution anywhere. See AUTOLOOP.md.",
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
   "permissions": {
     "allow": [
       "Bash(gh issue *)",
