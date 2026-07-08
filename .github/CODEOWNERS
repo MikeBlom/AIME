@@ -1,0 +1,4 @@
+# Default owner for everything in the repo. Review requests route here when
+# branch protection requires code-owner review (see docs/40-Developer-Experience.md,
+# "Branch protection notes").
+* @MikeBlom
