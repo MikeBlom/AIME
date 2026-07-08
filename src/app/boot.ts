@@ -10,10 +10,16 @@ import { EntityStore, EventBus, ModuleRegistry, RuntimeLoop } from '../core';
 import type { PackFiles, ResolvedContentGraph } from '../content';
 import { loadPack } from '../content';
 import type { Platform } from '../platform';
-import { movementPlugin, scenePlugin, REGION_ENTERED } from '../systems';
+import {
+  movementPlugin,
+  pointerToLogical,
+  renderFrame,
+  renderPlugin,
+  scenePlugin,
+  REGION_ENTERED,
+} from '../systems';
 import type { DebugSnapshot } from './debug';
 import { buildDebugSnapshot, formatDebugOverlay } from './debug';
-import { pointerToLogical, present } from './present';
 import type { SpawnedWorld } from './spawn';
 import { spawnWorld } from './spawn';
 
@@ -54,6 +60,7 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
   const registry = new ModuleRegistry();
   registry.register(scenePlugin);
   registry.register(movementPlugin);
+  registry.register(renderPlugin);
 
   const world = new EntityStore();
   const events = new EventBus({ logEnabled: true });
@@ -89,8 +96,8 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
           pointer: { x: pointer.x, y: pointer.y, buttons: snapshot.pointer.buttons },
         };
       },
-      onPresent: (_alpha: number, context: SystemContext) => {
-        present(context.world, platform.render);
+      onPresent: (alpha: number, context: SystemContext) => {
+        renderFrame(alpha, context, platform.render);
         options.onOverlayText?.(formatDebugOverlay(buildDebugSnapshot(loop, registry, events)));
       },
       monotonicNowMs: () => platform.timers.monotonicNowMs(),

@@ -19,6 +19,7 @@
     "metaphors/**",
     "achievements/**",
     "minigames/**",
-    "strings/**"
+    "strings/**",
+    "assets/**"
   ]
 }

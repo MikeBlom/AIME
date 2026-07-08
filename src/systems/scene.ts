@@ -29,13 +29,17 @@ export type Motion = { readonly moving: boolean };
 export const MOTION = defineComponentType<Motion>('motion');
 
 /**
- * How the presenter draws an entity. `kind` is a generic scene role
- * (player/building/npc marker), never a career fact; sizes are logical units.
+ * How rendering draws an entity. `kind` is a generic scene role
+ * (player/building/npc marker), never a career fact; sizes are logical
+ * units. `layer` overrides the kind's default draw layer; `spriteRef`
+ * names an asset id resolved through the pack's asset manifest.
  */
 export type Renderable = {
   readonly kind: string;
   readonly width: number;
   readonly height: number;
+  readonly layer?: number;
+  readonly spriteRef?: string;
 };
 export const RENDERABLE = defineComponentType<Renderable>('renderable');
 
@@ -49,6 +53,45 @@ export const REGION_ENTERED = defineEventType<{ readonly regionId: string }>('re
 /** Announced when a player-controlled entity starts or stops moving. */
 export const MOVEMENT_STARTED = defineEventType<{ readonly entityId: number }>('movement.started');
 export const MOVEMENT_STOPPED = defineEventType<{ readonly entityId: number }>('movement.stopped');
+
+/**
+ * The whole-space fit: the uniform scale and centered letterbox offsets
+ * that map the logical space onto a surface. Rendering's camera transform
+ * builds on the same fit scale; input normalization inverts it.
+ */
+export function fitTransform(surface: { readonly width: number; readonly height: number }): {
+  scale: number;
+  offsetX: number;
+  offsetY: number;
+} {
+  const scale = Math.min(
+    surface.width / LOGICAL_SPACE.width,
+    surface.height / LOGICAL_SPACE.height,
+  );
+  return {
+    scale,
+    offsetX: (surface.width - LOGICAL_SPACE.width * scale) / 2,
+    offsetY: (surface.height - LOGICAL_SPACE.height * scale) / 2,
+  };
+}
+
+/**
+ * Surface pixels → logical units under the whole-space fit, clamped into
+ * the logical space. Camera-aware pointer mapping arrives with the Input
+ * System issue; the walking-skeleton view is the whole-space fit.
+ */
+export function pointerToLogical(
+  x: number,
+  y: number,
+  surface: { readonly width: number; readonly height: number },
+): { x: number; y: number } {
+  const { scale, offsetX, offsetY } = fitTransform(surface);
+  if (scale <= 0) return { x: 0, y: 0 };
+  return {
+    x: Math.min(LOGICAL_SPACE.width, Math.max(0, (x - offsetX) / scale)),
+    y: Math.min(LOGICAL_SPACE.height, Math.max(0, (y - offsetY) / scale)),
+  };
+}
 
 /**
  * The scene plugin: no Systems, just the shared scene component and event

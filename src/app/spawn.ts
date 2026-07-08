@@ -7,7 +7,16 @@
  */
 import type { ComponentData, EntityId, EntityStore } from '../core';
 import type { ResolvedContentGraph } from '../content';
-import { LOGICAL_SPACE, MOTION, PLAYER_CONTROLLED, POSITION, REGION, RENDERABLE } from '../systems';
+import {
+  ASSET_MANIFEST,
+  CAMERA,
+  LOGICAL_SPACE,
+  MOTION,
+  PLAYER_CONTROLLED,
+  POSITION,
+  REGION,
+  RENDERABLE,
+} from '../systems';
 
 /** Logical-unit sizes for the slice's generic marker kinds. */
 const MARKER_SIZES: ReadonlyMap<string, { readonly width: number; readonly height: number }> =
@@ -63,13 +72,40 @@ export function spawnWorld(world: EntityStore, graph: ResolvedContentGraph): Spa
     { kind: 'npc', ids: [...stringList(contains['npcs'])].sort(), y: 112 },
   ];
   for (const row of rows) {
-    row.ids.forEach((_, index) => {
+    row.ids.forEach((id, index) => {
       const marker = world.createEntity();
       const size = MARKER_SIZES.get(row.kind) ?? PLAYER_SIZE;
       world.addComponent(marker, POSITION, markerPosition(index, row.ids.length, row.y));
-      world.addComponent(marker, RENDERABLE, { kind: row.kind, ...size });
+      // The marker's sprite is the content entity's declared appearance,
+      // resolved at draw time through the pack's asset manifest.
+      const assetRef = asRecord(asRecord(graph.entities.get(id)?.doc)['appearance'])['assetRef'];
+      world.addComponent(marker, RENDERABLE, {
+        kind: row.kind,
+        ...size,
+        ...(typeof assetRef === 'string' ? { spriteRef: assetRef } : {}),
+      });
     });
   }
+
+  // Land the pack's asset manifest(s) in world state so rendering can
+  // resolve sprite refs without reaching into the content graph.
+  const manifestEntries: Record<string, string> = {};
+  for (const entity of graph.byType.get('assets')?.values() ?? []) {
+    for (const [assetId, address] of Object.entries(asRecord(entity.doc['entries']))) {
+      if (typeof address === 'string') manifestEntries[assetId] = address;
+    }
+  }
+  const manifest = world.createEntity();
+  world.addComponent(manifest, ASSET_MANIFEST, { entries: manifestEntries });
+
+  // Default view: a zoom-1 camera on the region center — the whole-space
+  // fit — until a camera System takes ownership in a later issue.
+  const camera = world.createEntity();
+  world.addComponent(camera, CAMERA, {
+    x: LOGICAL_SPACE.width / 2,
+    y: LOGICAL_SPACE.height / 2,
+    zoom: 1,
+  });
 
   const player = world.createEntity();
   world.addComponent(player, POSITION, {
