@@ -9,12 +9,14 @@
 export type {
   AudioOutput,
   AudioPlayOptions,
+  DrawTextOptions,
   InputDevice,
   InputSnapshot,
   KeyValueStorage,
   Platform,
   PlatformData,
   RenderSurface,
+  TextAlign,
   TimerSource,
 } from './types';
 

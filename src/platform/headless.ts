@@ -99,6 +99,16 @@ function createRenderSurface(width: number, height: number): HeadlessRenderSurfa
       commands.push({ op: 'drawLine', x1, y1, x2, y2, color, lineWidth }),
     drawSprite: (assetRef, x, y, w, h) =>
       commands.push({ op: 'drawSprite', assetRef, x, y, width: w ?? null, height: h ?? null }),
+    drawText: (text, x, y, options) =>
+      commands.push({
+        op: 'drawText',
+        text,
+        x,
+        y,
+        color: options?.color ?? null,
+        sizePx: options?.sizePx ?? null,
+        align: options?.align ?? null,
+      }),
     get commands() {
       return commands.slice();
     },

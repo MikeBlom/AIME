@@ -77,6 +77,13 @@ function createRenderSurface(canvas: HTMLCanvasElement): RenderSurface {
       if (!image.complete || image.naturalWidth === 0) return;
       context.drawImage(image, x, y, width ?? image.naturalWidth, height ?? image.naturalHeight);
     },
+    drawText: (text, x, y, options) => {
+      context.fillStyle = options?.color ?? '#e6edf3';
+      context.font = `${options?.sizePx ?? 14}px system-ui, sans-serif`;
+      context.textAlign = options?.align ?? 'left';
+      context.textBaseline = 'top';
+      context.fillText(text, x, y);
+    },
   };
 }
 

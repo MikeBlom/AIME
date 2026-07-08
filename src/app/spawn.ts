@@ -11,6 +11,7 @@ import {
   ASSET_MANIFEST,
   CAMERA,
   IDLE_MOTION,
+  LOCALE_STRINGS,
   LOGICAL_SPACE,
   MOTION,
   PLAYER_CONTROLLED,
@@ -98,6 +99,15 @@ export function spawnWorld(world: EntityStore, graph: ResolvedContentGraph): Spa
   }
   const manifest = world.createEntity();
   world.addComponent(manifest, ASSET_MANIFEST, { entries: manifestEntries });
+
+  // Land the default-locale strings table so UI resolves every player-
+  // visible key from world state (DATA-FR-011), mirroring the manifest.
+  const stringEntries: Record<string, string> = {};
+  for (const [key, text] of graph.strings.get(graph.defaultLocale) ?? []) {
+    stringEntries[key] = text;
+  }
+  const strings = world.createEntity();
+  world.addComponent(strings, LOCALE_STRINGS, { entries: stringEntries });
 
   // Default view: a zoom-1 camera on the region center — the whole-space
   // fit. The Camera System adopts this entity at init and owns the slice.

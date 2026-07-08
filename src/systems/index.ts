@@ -90,3 +90,19 @@ export type {
   RegionState,
   Renderable,
 } from './scene';
+export {
+  createUiPlugin,
+  createUiSystem,
+  IDLE_UI_STATE,
+  LOCALE_STRINGS,
+  PROMPT_RADIUS,
+  UI_DIALOGUE_CHOSEN,
+  UI_DIALOGUE_CLOSE,
+  UI_DIALOGUE_OPEN,
+  UI_HINT,
+  UI_PROMPT_INTERACT_KEY,
+  UI_STATE,
+  uiFrame,
+  uiLayout,
+} from './ui';
+export type { DialogueSurface, LocaleStrings, UiState } from './ui';

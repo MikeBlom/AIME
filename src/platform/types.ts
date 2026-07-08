@@ -23,10 +23,22 @@ export type PlatformData =
   | readonly PlatformData[]
   | { readonly [key: string]: PlatformData };
 
+/** Horizontal anchoring for `drawText`; `x` is the anchored edge/center. */
+export type TextAlign = 'left' | 'center' | 'right';
+
+/** Per-call text options; backends apply defaults where omitted. */
+export interface DrawTextOptions {
+  /** CSS color string. Default is backend-defined (a legible light tone). */
+  readonly color?: string;
+  /** Font size in surface pixels. Default is backend-defined. */
+  readonly sizePx?: number;
+  readonly align?: TextAlign;
+}
+
 /**
- * A render surface able to draw simple primitives and sprites. Coordinates
- * are surface pixels, origin top-left. Colors are CSS color strings — a
- * host-agnostic notation every backend can interpret or record.
+ * A render surface able to draw simple primitives, sprites, and text.
+ * Coordinates are surface pixels, origin top-left. Colors are CSS color
+ * strings — a host-agnostic notation every backend can interpret or record.
  */
 export interface RenderSurface {
   /** Current drawable size in pixels. */
@@ -35,6 +47,13 @@ export interface RenderSurface {
   clear(color: string): void;
   fillRect(x: number, y: number, width: number, height: number, color: string): void;
   drawLine(x1: number, y1: number, x2: number, y2: number, color: string, width?: number): void;
+  /**
+   * Draw one line of already-localized text with `y` as the top edge. The
+   * text arrives resolved from the content pack's locale strings — never a
+   * career fact from engine code. Fonts are backend-owned (a generic host
+   * UI face), so no asset dependency exists for text.
+   */
+  drawText(text: string, x: number, y: number, options?: DrawTextOptions): void;
   /**
    * Draw the sprite asset named by `assetRef` (an asset id/URL from the
    * content pack's manifest — never a career fact). The backend owns
