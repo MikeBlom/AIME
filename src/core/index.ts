@@ -12,6 +12,17 @@ export const LAYER = 'core';
 export { EntityStore, defineComponentType } from './entity-store';
 export type { ComponentData, ComponentType, EntityId } from './entity-store';
 
+export { ModuleRegistry } from './registry';
+export type {
+  Module,
+  Plugin,
+  PlatformInterfaces,
+  RegistryManifest,
+  Scheduler,
+  System,
+  SystemContext,
+} from './registry';
+
 export { EventBus, defineEventType } from './event-bus';
 export type {
   Delivery,
