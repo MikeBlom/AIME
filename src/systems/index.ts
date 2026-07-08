@@ -3,8 +3,28 @@
  * (rendering, input, quest, dialogue, ...). Each conforms to the System
  * interface and lifecycle in docs/02-System-Architecture.md and communicates
  * only via the event bus and shared world state — never direct references.
- *
- * Systems arrive with their own issues; this placeholder only anchors the
- * layer's location and import path.
  */
 export const LAYER = 'systems';
+
+export { movementPlugin, movementSystem } from './movement';
+export {
+  LOGICAL_SPACE,
+  MOTION,
+  MOVEMENT_STARTED,
+  MOVEMENT_STOPPED,
+  PLAYER_CONTROLLED,
+  POSITION,
+  REGION,
+  REGION_ENTERED,
+  RENDERABLE,
+  readControls,
+  scenePlugin,
+} from './scene';
+export type {
+  ControlSnapshot,
+  Motion,
+  PlayerControlled,
+  Position,
+  RegionState,
+  Renderable,
+} from './scene';

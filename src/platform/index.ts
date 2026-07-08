@@ -20,6 +20,9 @@ export type {
 export { createBrowserPlatform } from './browser';
 export type { BrowserPlatform } from './browser';
 
+export { mountBrowserHost } from './browser-host';
+export type { BrowserHost } from './browser-host';
+
 export { createHeadlessPlatform } from './headless';
 export type {
   HeadlessAudioOutput,
