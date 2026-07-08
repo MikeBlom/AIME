@@ -1,0 +1,14 @@
+{
+  "$comment": "Committed permission allowlist for the autonomous build loop. Kept in settings.json (not settings.local.json) so both interactive Fable sessions and the scheduled cloud routine inherit it. Anything not listed here still prompts — that is the safety margin. After issue #6 fixes the stack, APPEND the concrete build/test/lint commands (e.g. Bash(pnpm run *)) so unattended runs don't stall on prompts. See AUTOLOOP.md.",
+  "permissions": {
+    "allow": [
+      "Bash(gh issue *)",
+      "Bash(gh pr *)",
+      "Bash(gh api *)",
+      "Bash(gh label *)",
+      "Bash(gh auth status)",
+      "Bash(git *)",
+      "Bash(python3 scripts/*)"
+    ]
+  }
+}
