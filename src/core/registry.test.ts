@@ -3,6 +3,8 @@ import { EntityStore, defineComponentType } from './entity-store';
 import { EventBus, defineEventType } from './event-bus';
 import { ModuleRegistry } from './registry';
 import type { Module, System, SystemContext } from './registry';
+import { RngService } from './rng';
+import { TimeService } from './time';
 
 /** A fake Context per NFR-ARCH-002: real store/bus, inert scheduler/platform. */
 function makeContext(): SystemContext {
@@ -11,6 +13,9 @@ function makeContext(): SystemContext {
     events: new EventBus(),
     scheduler: { schedule: () => undefined },
     platform: {},
+    time: new TimeService(1 / 60),
+    rng: new RngService(1),
+    input: { current: {} },
   };
 }
 

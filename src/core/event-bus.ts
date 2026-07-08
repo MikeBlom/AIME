@@ -13,6 +13,7 @@
  * (FR-ARCH-013) records sequence numbers, never timestamps.
  */
 import type { ComponentData } from './entity-store';
+import { deepFreeze } from './freeze';
 
 /**
  * An event's payload is plain, immutable data (FR-ARCH-011) — the same
@@ -59,15 +60,6 @@ interface Subscriber {
   readonly handler: EventHandler<EventPayload>;
   readonly priority: number;
   readonly order: number;
-}
-
-/** Recursively freeze a payload so no subscriber can mutate it (FR-ARCH-011). */
-function deepFreeze<T extends EventPayload>(value: T): T {
-  if (typeof value === 'object' && value !== null && !Object.isFrozen(value)) {
-    Object.freeze(value);
-    for (const child of Object.values(value)) deepFreeze(child as EventPayload);
-  }
-  return value;
 }
 
 export class EventBus {
