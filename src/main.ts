@@ -24,6 +24,9 @@ export function bootBrowser(): (() => void) | null {
     packFiles: packFilesFromBundle(),
     seed: DEFAULT_SEED,
     onOverlayText: host.setOverlayText,
+    // Safe resume (issue #24): a returning visitor continues where they
+    // left off; a missing or incompatible save starts fresh.
+    resume: true,
   });
   host.onVisibilityChange((visible) => {
     if (visible) {
