@@ -1,0 +1,24 @@
+{
+  "schemaType": "pack",
+  "schemaVersion": "1.0.0",
+  "id": "pack.reference",
+  "version": "0.1.0",
+  "engineCompatibility": ">=0.1.0 <1.0.0",
+  "creator": {
+    "displayName": "PLACEHOLDER Creator Name",
+    "tagline": "PLACEHOLDER one-line framing shown only in-world, never as a resume"
+  },
+  "defaultLocale": "en",
+  "entry": { "startRegion": "region.arrival" },
+  "documents": [
+    "regions/**",
+    "buildings/**",
+    "npcs/**",
+    "quests/**",
+    "dialogue/**",
+    "metaphors/**",
+    "achievements/**",
+    "minigames/**",
+    "strings/**"
+  ]
+}

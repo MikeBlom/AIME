@@ -1,0 +1,9 @@
+{
+  "schemaType": "metaphor",
+  "schemaVersion": "1.0.0",
+  "id": "metaphor.distributed-systems",
+  "accomplishment": "PLACEHOLDER: what the creator actually did; author-facing note only, never rendered",
+  "mechanic": "engine.mechanic.route-and-balance",
+  "params": { "note": "PLACEHOLDER mechanic-specific configuration" },
+  "framingKey": "metaphor.distributed-systems.framing"
+}

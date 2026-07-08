@@ -1,0 +1,23 @@
+{
+  "//": "Emits the pure content pipeline (src/content + the bits of core it imports) as node-runnable ESM for the standalone validator CLI (DATA-FR-013). The main tsconfig stays noEmit; this one is the CLI's build.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "exactOptionalPropertyTypes": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "rootDir": "src",
+    "outDir": "dist-content",
+    "declaration": false,
+    "sourceMap": false
+  },
+  "include": ["src/content"]
+}

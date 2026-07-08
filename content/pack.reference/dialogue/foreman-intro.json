@@ -1,0 +1,13 @@
+{
+  "schemaType": "dialogue",
+  "schemaVersion": "1.0.0",
+  "id": "dialogue.foreman-intro",
+  "nodes": [
+    {
+      "id": "n1",
+      "textKey": "dialogue.foreman-intro.n1",
+      "choices": [{ "textKey": "dialogue.foreman-intro.n1.c1", "goto": "n2" }]
+    },
+    { "id": "n2", "textKey": "dialogue.foreman-intro.n2", "end": true }
+  ]
+}

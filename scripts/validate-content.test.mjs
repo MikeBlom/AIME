@@ -2,18 +2,11 @@ import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { discoverPacks, validateContentRoot, validatePack } from './validate-content.mjs';
+import { discoverPacks, readPackFiles } from './validate-content.mjs';
 
-const VALID_MANIFEST = {
-  schemaType: 'pack',
-  schemaVersion: '1.0',
-  id: 'pack.reference',
-  version: '0.1.0',
-  engineCompatibility: '>=1.0.0 <2.0.0',
-  creator: { displayName: 'PLACEHOLDER' },
-  defaultLocale: 'en',
-  documents: ['regions/**'],
-};
+// The validation logic itself lives in src/content (see loader.test.ts);
+// this suite covers the CLI's filesystem adapter: pack discovery and
+// reading a pack directory into the pipeline's pack-relative files map.
 
 function makePack(files) {
   const root = mkdtempSync(join(tmpdir(), 'rw-content-'));
@@ -29,7 +22,7 @@ function makePack(files) {
 
 describe('discoverPacks', () => {
   it('finds directories containing a pack.json manifest', () => {
-    const { root, pack } = makePack({ 'pack.json': VALID_MANIFEST });
+    const { root, pack } = makePack({ 'pack.json': { schemaType: 'pack' } });
     expect(discoverPacks(root)).toEqual([pack]);
   });
 
@@ -38,62 +31,20 @@ describe('discoverPacks', () => {
   });
 });
 
-describe('validatePack', () => {
-  it('accepts a well-formed pack with declared schemaType/schemaVersion documents', () => {
+describe('readPackFiles', () => {
+  it('reads every .json file into a sorted, pack-relative files map', () => {
     const { pack } = makePack({
-      'pack.json': VALID_MANIFEST,
-      'regions/arrival.json': {
-        schemaType: 'region',
-        schemaVersion: '1.0',
-        id: 'region.arrival',
-      },
+      'pack.json': { schemaType: 'pack' },
+      'regions/arrival.json': { schemaType: 'region' },
+      'strings/en/strings.json': { schemaType: 'strings' },
+      'notes.txt': 'not json, not read',
     });
-    expect(validatePack(pack)).toEqual([]);
-  });
-
-  it('rejects malformed JSON with a diagnostic naming the document', () => {
-    const { pack } = makePack({
-      'pack.json': VALID_MANIFEST,
-      'regions/broken.json': '{ not json',
-    });
-    const diagnostics = validatePack(pack);
-    expect(diagnostics).toHaveLength(1);
-    expect(diagnostics[0].file).toContain('broken.json');
-    expect(diagnostics[0].expected).toBe('well-formed JSON');
-  });
-
-  it('rejects a manifest missing required fields, naming each field (DATA-FR-001)', () => {
-    const { pack } = makePack({ 'pack.json': { schemaType: 'pack' } });
-    const missing = validatePack(pack).map((d) => d.path);
-    expect(missing).toContain('id');
-    expect(missing).toContain('engineCompatibility');
-    expect(missing).toContain('defaultLocale');
-  });
-
-  it('rejects documents that do not declare schemaType and schemaVersion (DATA-FR-003)', () => {
-    const { pack } = makePack({
-      'pack.json': VALID_MANIFEST,
-      'npcs/foreman.json': { id: 'npc.foreman' },
-    });
-    const paths = validatePack(pack).map((d) => d.path);
-    expect(paths).toEqual(expect.arrayContaining(['schemaType', 'schemaVersion']));
-  });
-
-  it('rejects non-namespaced ids (DATA-FR-008)', () => {
-    const { pack } = makePack({
-      'pack.json': VALID_MANIFEST,
-      'npcs/foreman.json': { schemaType: 'npc', schemaVersion: '1.0', id: 'Foreman' },
-    });
-    const diagnostics = validatePack(pack);
-    expect(diagnostics).toHaveLength(1);
-    expect(diagnostics[0].path).toBe('id');
-    expect(diagnostics[0].got).toBe('Foreman');
-  });
-});
-
-describe('validateContentRoot', () => {
-  it('is green when no packs exist yet (the reference pack has its own issue)', () => {
-    const empty = mkdtempSync(join(tmpdir(), 'rw-empty-'));
-    expect(validateContentRoot(empty)).toEqual({ packs: [], diagnostics: [] });
+    const files = readPackFiles(pack);
+    expect([...files.keys()]).toEqual([
+      'pack.json',
+      'regions/arrival.json',
+      'strings/en/strings.json',
+    ]);
+    expect(JSON.parse(files.get('pack.json'))).toEqual({ schemaType: 'pack' });
   });
 });
