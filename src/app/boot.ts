@@ -12,6 +12,7 @@ import { loadPack } from '../content';
 import type { Platform } from '../platform';
 import {
   createAudioPlugin,
+  createCameraPlugin,
   inputPlugin,
   movementPlugin,
   pointerToLogical,
@@ -63,6 +64,7 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
   registry.register(scenePlugin);
   registry.register(inputPlugin);
   registry.register(movementPlugin);
+  registry.register(createCameraPlugin());
   registry.register(renderPlugin);
   registry.register(createAudioPlugin());
 
