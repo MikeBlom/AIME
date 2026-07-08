@@ -1,0 +1,11 @@
+# Dependencies and build output
+node_modules/
+dist/
+coverage/
+
+# Local tool state
+.claude/settings.local.json
+*.log
+.DS_Store
+__pycache__/
+*.pyc
