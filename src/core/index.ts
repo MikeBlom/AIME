@@ -11,3 +11,13 @@ export const LAYER = 'core';
 
 export { EntityStore, defineComponentType } from './entity-store';
 export type { ComponentData, ComponentType, EntityId } from './entity-store';
+
+export { EventBus, defineEventType } from './event-bus';
+export type {
+  Delivery,
+  EventHandler,
+  EventLogEntry,
+  EventPayload,
+  EventRecord,
+  EventType,
+} from './event-bus';
