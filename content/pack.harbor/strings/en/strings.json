@@ -33,6 +33,10 @@
     "ui.settings.action.move-up": "PLACEHOLDER Move up",
     "ui.settings.action.move-down": "PLACEHOLDER Move down",
     "ui.settings.action.interact": "PLACEHOLDER Interact",
-    "ui.settings.locale": "PLACEHOLDER Language"
+    "ui.settings.locale": "PLACEHOLDER Language",
+    "onboarding.hint.welcome": "PLACEHOLDER The harbor fog parts as you step ashore",
+    "onboarding.hint.move": "PLACEHOLDER The quay runs toward the dark tower — follow it",
+    "onboarding.hint.interact": "PLACEHOLDER The keeper watches from the lighthouse door — go say hello",
+    "onboarding.hint.objective": "PLACEHOLDER The beacon is still dark; the boats are waiting"
   }
 }

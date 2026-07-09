@@ -24,6 +24,7 @@ import {
   createEnvironmentPlugin,
   createMinigameHostPlugin,
   createNpcPlugin,
+  createOnboardingPlugin,
   createOrchestratePlugin,
   createProgressionPlugin,
   createQuestPlugin,
@@ -138,6 +139,9 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
   const saveLoadOptions = { pack: { id: graph.packId, version: graph.packVersion } };
   registry.register(renderPlugin);
   registry.register(createUiPlugin());
+  // After UI (issue #44): diegetic first-session guidance reads the UI
+  // slice the UI System settled this step and rides its hint line.
+  registry.register(createOnboardingPlugin());
   registry.register(createAudioPlugin());
   // Passive funnel telemetry (issue #39): a bus subscriber translating
   // gameplay events into anonymized metrics; never on the gameplay path.
