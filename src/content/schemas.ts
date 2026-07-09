@@ -299,6 +299,22 @@ const QUEST: ContentTypeSpec = {
   },
 };
 
+/**
+ * Optional dialogue hook (DATA-FR-009's spirit): a node or choice may
+ * declare that taking it resolves a quest objective, feeding the quest
+ * engine's standardized result event. Structure only — which quest means
+ * what stays in the pack.
+ */
+const DIALOGUE_RESOLVES: ContentSchema = {
+  type: 'object',
+  required: ['questRef', 'objectiveId'],
+  properties: {
+    questRef: idOf('quest'),
+    objectiveId: { type: 'string' },
+    outcome: { enum: ['solved', 'bypassed'] },
+  },
+};
+
 const DIALOGUE: ContentTypeSpec = {
   schemaType: 'dialogue',
   schemaVersion: '1.0.0',
@@ -314,12 +330,17 @@ const DIALOGUE: ContentTypeSpec = {
             id: { type: 'string' },
             textKey: LOCALE_KEY,
             end: { type: 'boolean' },
+            resolves: DIALOGUE_RESOLVES,
             choices: {
               type: 'array',
               items: {
                 type: 'object',
                 required: ['textKey', 'goto'],
-                properties: { textKey: LOCALE_KEY, goto: { type: 'string' } },
+                properties: {
+                  textKey: LOCALE_KEY,
+                  goto: { type: 'string' },
+                  resolves: DIALOGUE_RESOLVES,
+                },
               },
             },
           },
@@ -339,6 +360,36 @@ const DIALOGUE: ContentTypeSpec = {
       },
       { id: 'n2', textKey: 'dialogue.foreman-intro.n2', end: true },
     ],
+  },
+  refs: (doc) => {
+    const out: ExtractedRef[] = [];
+    const questRefOf = (value: ComponentData | undefined): string | null => {
+      if (typeof value !== 'object' || value === null || Array.isArray(value)) return null;
+      const ref = (value as Readonly<Record<string, ComponentData>>)['questRef'];
+      return typeof ref === 'string' ? ref : null;
+    };
+    const nodes = Array.isArray(doc['nodes']) ? doc['nodes'] : [];
+    nodes.forEach((node, i) => {
+      const record = node as Readonly<Record<string, ComponentData>>;
+      const nodeRef = questRefOf(record['resolves']);
+      if (nodeRef !== null) {
+        out.push({ path: `nodes[${i}].resolves.questRef`, targetType: 'quest', id: nodeRef });
+      }
+      const choices = Array.isArray(record['choices']) ? record['choices'] : [];
+      choices.forEach((choice, j) => {
+        const choiceRef = questRefOf(
+          (choice as Readonly<Record<string, ComponentData>>)['resolves'],
+        );
+        if (choiceRef !== null) {
+          out.push({
+            path: `nodes[${i}].choices[${j}].resolves.questRef`,
+            targetType: 'quest',
+            id: choiceRef,
+          });
+        }
+      });
+    });
+    return out;
   },
   keys: (doc) => {
     const out: ExtractedKey[] = [];
