@@ -10,6 +10,7 @@ import type { ResolvedContentGraph } from '../content';
 import {
   ASSET_MANIFEST,
   CAMERA,
+  COLLIDER,
   IDLE_MOTION,
   LOCALE_STRINGS,
   LOGICAL_SPACE,
@@ -86,6 +87,9 @@ export function spawnWorld(world: EntityStore, graph: ResolvedContentGraph): Spa
         ...size,
         ...(typeof assetRef === 'string' ? { spriteRef: assetRef } : {}),
       });
+      // Markers are the region's world geometry: solid, so the player walks
+      // around them, not through them (issue #20; interiors arrive later).
+      world.addComponent(marker, COLLIDER, { ...size, mode: 'solid' });
     });
   }
 
@@ -126,6 +130,7 @@ export function spawnWorld(world: EntityStore, graph: ResolvedContentGraph): Spa
   world.addComponent(player, PLAYER_CONTROLLED, { speed: PLAYER_SPEED });
   world.addComponent(player, MOTION, IDLE_MOTION);
   world.addComponent(player, RENDERABLE, { kind: 'player', ...PLAYER_SIZE });
+  world.addComponent(player, COLLIDER, { ...PLAYER_SIZE, mode: 'solid' });
 
   return { regionId: regionEntity.id, player };
 }

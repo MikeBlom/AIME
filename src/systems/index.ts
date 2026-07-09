@@ -57,6 +57,22 @@ export {
 export type { BindingTable, InputBindings, InputIntent } from './input';
 export { movementPlugin, movementSystem } from './movement';
 export {
+  boxesOverlap,
+  BROADPHASE_CELL,
+  buildBroadphase,
+  COLLIDER,
+  COLLISION_CONTACTS,
+  COLLISION_ENDED,
+  COLLISION_STARTED,
+  colliderBox,
+  physicsPlugin,
+  physicsSystem,
+  TRIGGER_ENTERED,
+  TRIGGER_EXITED,
+  TRIGGER_OCCUPANCY,
+} from './physics';
+export type { Box, Broadphase, Collider, CollisionContacts, TriggerOccupancy } from './physics';
+export {
   ASSET_MANIFEST,
   CAMERA,
   RENDER_MOTION,
