@@ -16,6 +16,7 @@ import {
   createAudioPlugin,
   createCameraPlugin,
   createDialoguePlugin,
+  createNpcPlugin,
   createQuestPlugin,
   createSaveLoadPlugin,
   createUiPlugin,
@@ -81,6 +82,9 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
   registry.register(scenePlugin);
   registry.register(inputPlugin);
   registry.register(movementPlugin);
+  // Registered between Movement and Physics so the stable tiebreak keeps
+  // character motion inside the same step's constraint sweep.
+  registry.register(createNpcPlugin());
   registry.register(physicsPlugin);
   registry.register(createQuestPlugin());
   registry.register(createDialoguePlugin());

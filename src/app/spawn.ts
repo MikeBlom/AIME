@@ -7,6 +7,7 @@
  */
 import type { ComponentData, EntityId, EntityStore } from '../core';
 import type { ResolvedContentGraph } from '../content';
+import type { NpcRoutineEntry } from '../systems';
 import {
   ASSET_MANIFEST,
   CAMERA,
@@ -17,6 +18,7 @@ import {
   LOGICAL_SPACE,
   initialQuestState,
   MOTION,
+  NPC,
   PLAYER_CONTROLLED,
   POSITION,
   QUEST,
@@ -42,6 +44,36 @@ function asRecord(value: ComponentData | undefined): Readonly<Record<string, Com
 
 function stringList(value: ComponentData | undefined): readonly string[] {
   return Array.isArray(value) ? value.filter((id): id is string => typeof id === 'string') : [];
+}
+
+/**
+ * Translate a content `routine` array into the engine's routine entries:
+ * `phase` is required; `waypoints` keeps only finite points; `speed` keeps
+ * only finite positive numbers. Authoring notes (`activity`) never cross
+ * the seam; anything malformed degrades toward idle (FR-ARCH-008).
+ */
+function readRoutine(value: ComponentData | undefined): readonly NpcRoutineEntry[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((entry) => asRecord(entry))
+    .filter((entry) => typeof entry['phase'] === 'string')
+    .map((entry) => ({
+      phase: entry['phase'] as string,
+      waypoints: (Array.isArray(entry['waypoints']) ? entry['waypoints'] : [])
+        .map((point) => asRecord(point))
+        .filter(
+          (point) =>
+            typeof point['x'] === 'number' &&
+            Number.isFinite(point['x']) &&
+            typeof point['y'] === 'number' &&
+            Number.isFinite(point['y']),
+        )
+        .map((point) => ({ x: point['x'] as number, y: point['y'] as number })),
+      speed:
+        typeof entry['speed'] === 'number' && Number.isFinite(entry['speed']) && entry['speed'] > 0
+          ? entry['speed']
+          : null,
+    }));
 }
 
 /** Evenly space `count` markers across the logical width at a given row. */
@@ -94,6 +126,18 @@ export function spawnWorld(world: EntityStore, graph: ResolvedContentGraph): Spa
       // Markers are the region's world geometry: solid, so the player walks
       // around them, not through them (issue #20; interiors arrive later).
       world.addComponent(marker, COLLIDER, { ...size, mode: 'solid' });
+      // Characters additionally carry their behavior definition (issue
+      // #27): routine, dialogue reference, and a motion slice so the NPC
+      // System can walk them and route interact presses.
+      if (row.kind === 'npc') {
+        const npcDoc = asRecord(graph.entities.get(id)?.doc);
+        world.addComponent(marker, NPC, {
+          npcId: id,
+          dialogueRef: typeof npcDoc['dialogueRef'] === 'string' ? npcDoc['dialogueRef'] : null,
+          routine: readRoutine(npcDoc['routine']),
+        });
+        world.addComponent(marker, MOTION, IDLE_MOTION);
+      }
     });
   }
 

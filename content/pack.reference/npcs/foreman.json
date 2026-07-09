@@ -5,7 +5,15 @@
   "displayNameKey": "npc.foreman.name",
   "appearance": { "assetRef": "asset.npc.foreman" },
   "routine": [
-    { "phase": "day", "activity": "PLACEHOLDER patrol path or task" },
+    {
+      "phase": "day",
+      "activity": "PLACEHOLDER patrol between the control house and the yard",
+      "waypoints": [
+        { "x": 120, "y": 112 },
+        { "x": 200, "y": 112 }
+      ],
+      "speed": 20
+    },
     { "phase": "night", "activity": "PLACEHOLDER rest location" }
   ],
   "dialogueRef": "dialogue.foreman-intro",
