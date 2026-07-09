@@ -37,6 +37,7 @@ import type {
 } from '../core';
 import { defineEventType } from '../core';
 import type { KeyValueStorage } from '../platform';
+import { ACHIEVEMENT_STATE } from './achievements';
 import { AUDIO_SETTINGS } from './audio';
 import { PROGRESSION } from './progression';
 import { QUEST_STATE, SYSTEM_RESTORED } from './quest';
@@ -78,6 +79,8 @@ export const PROGRESSION_SLICES: readonly ComponentType<ComponentData>[] = [
   ACTIVE_SPACE,
   // Restored systems, unlocked capabilities, and inventory (issue #31).
   PROGRESSION,
+  // Achievement unlock state (issue #32).
+  ACHIEVEMENT_STATE,
 ];
 
 /** Gameplay events that trigger an autosave on the following update. */

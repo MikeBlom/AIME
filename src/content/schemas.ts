@@ -524,7 +524,30 @@ const ACHIEVEMENT: ContentTypeSpec = {
   schemaVersion: '1.0.0',
   schema: base('achievement', 'achievement', {
     required: ['titleKey'],
-    properties: { titleKey: LOCALE_KEY, descriptionKey: LOCALE_KEY },
+    properties: {
+      titleKey: LOCALE_KEY,
+      descriptionKey: LOCALE_KEY,
+      // The unlock rule (issue #32): an engine rule kind bound to pack
+      // ids/counts. An achievement without one never self-unlocks.
+      unlock: {
+        type: 'object',
+        required: ['kind'],
+        properties: {
+          kind: {
+            enum: [
+              'restored-region',
+              'restored-count',
+              'quest-completed',
+              'capability-unlocked',
+              'item-added',
+              'building-entered',
+            ],
+          },
+          ref: { type: 'string', pattern: ID_PATTERN },
+          count: { type: 'number' },
+        },
+      },
+    },
   }),
   example: {
     schemaType: 'achievement',
@@ -532,6 +555,23 @@ const ACHIEVEMENT: ContentTypeSpec = {
     id: 'achievement.first-light',
     titleKey: 'achievement.first-light.title',
     descriptionKey: 'achievement.first-light.description',
+    unlock: { kind: 'restored-count', count: 1 },
+  },
+  refs: (doc) => {
+    const unlock = doc['unlock'];
+    if (typeof unlock !== 'object' || unlock === null || Array.isArray(unlock)) return [];
+    const record = unlock as Readonly<Record<string, ComponentData>>;
+    const targetByKind: Readonly<Record<string, string>> = {
+      'restored-region': 'region',
+      'quest-completed': 'quest',
+      'building-entered': 'building',
+    };
+    const kind = record['kind'];
+    const ref = record['ref'];
+    const targetType = typeof kind === 'string' ? targetByKind[kind] : undefined;
+    return targetType !== undefined && typeof ref === 'string'
+      ? [{ path: 'unlock.ref', targetType, id: ref }]
+      : [];
   },
   keys: (doc) => {
     const out: ExtractedKey[] = [];
