@@ -676,3 +676,14 @@ export const CONTENT_SCHEMAS: ReadonlyMap<string, ContentTypeSpec> = new Map(
  * catalog so plugin-registered mechanics can extend it (FR-ARCH-018).
  */
 export const ENGINE_MECHANICS: readonly string[] = ['engine.mechanic.route-and-balance'];
+
+/**
+ * Params schemas per engine mechanic (issue #33; docs/03 edge case "a
+ * metaphor binds to a mechanic whose params schema it violates"): where a
+ * mechanic publishes a schema, the loader validates a metaphor's `params`
+ * against it with field-level diagnostics. A mechanic without an entry
+ * accepts any params shape. Grows with the mechanic catalog (#34); the
+ * loader also accepts an explicit map so plugin-provided mechanics
+ * validate the same way (FR-ARCH-018).
+ */
+export const ENGINE_MECHANIC_PARAMS: Readonly<Record<string, ContentSchema>> = {};

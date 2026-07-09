@@ -140,6 +140,64 @@ describe('rejection diagnostics name document, field, and value (AC1)', () => {
     });
   });
 
+  it('rejects metaphor params violating the mechanic published schema, field-level (issue #33)', () => {
+    const paramsSchema = {
+      type: 'object',
+      required: ['target'],
+      properties: { target: { type: 'number' } },
+      additionalProperties: false,
+    } as const;
+    const files = makePack({
+      'metaphors/one.json': {
+        schemaType: 'metaphor',
+        schemaVersion: '1.0.0',
+        id: 'metaphor.one',
+        mechanic: 'engine.mechanic.route-and-balance',
+        params: { target: 'plenty', stray: true },
+        framingKey: 'metaphor.one.framing',
+      },
+    });
+    const { diagnostics, graph } = validatePack(files, {
+      mechanicParams: { 'engine.mechanic.route-and-balance': paramsSchema },
+    });
+    expect(graph).toBeNull();
+    expect(errors(diagnostics).find((d) => d.path === 'params.target')).toMatchObject({
+      file: 'metaphors/one.json',
+      got: 'plenty',
+    });
+    expect(errors(diagnostics).find((d) => d.got === 'stray')).toMatchObject({ path: 'params' });
+  });
+
+  it('accepts params satisfying the schema; a schema-less mechanic accepts any shape', () => {
+    const paramsSchema = {
+      type: 'object',
+      required: ['target'],
+      properties: { target: { type: 'number' } },
+    } as const;
+    const good = makePack({
+      'metaphors/one.json': {
+        schemaType: 'metaphor',
+        schemaVersion: '1.0.0',
+        id: 'metaphor.one',
+        mechanic: 'engine.mechanic.route-and-balance',
+        params: { target: 3 },
+        framingKey: 'metaphor.one.framing',
+      },
+    });
+    expect(
+      validatePack(good, { mechanicParams: { 'engine.mechanic.route-and-balance': paramsSchema } })
+        .graph,
+    ).not.toBeNull();
+    // No published schema (the default map): the same params pass untouched.
+    expect(validatePack(good).graph).not.toBeNull();
+    // A missing params block fails a schema that requires fields.
+    const missing = makePack();
+    const { diagnostics } = validatePack(missing, {
+      mechanicParams: { 'engine.mechanic.route-and-balance': paramsSchema },
+    });
+    expect(errors(diagnostics).find((d) => d.path === 'params.target')).toBeDefined();
+  });
+
   it('rejects a missing default-locale key naming the document and key (DATA-FR-015)', () => {
     const files = makePack({
       'strings/en/strings.json': {

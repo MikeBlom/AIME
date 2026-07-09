@@ -40,6 +40,8 @@ export type QuestDefinition = {
   readonly questId: string;
   readonly titleKey: string;
   readonly regionRef: string;
+  /** The metaphor binding the mini-games host resolves on launch (issue #33). */
+  readonly metaphorRef?: string | null;
   readonly objectives: readonly QuestObjective[];
   /** Engine-vocabulary event names content asks to emit on completion. */
   readonly emitsOnComplete: readonly string[];

@@ -18,8 +18,9 @@ import type { Diagnostic } from './diagnostics.js';
 import { formatDiagnostic, hasErrors } from './diagnostics.js';
 import { matchesAnyGlob } from './glob.js';
 import { validateAgainstSchema } from './schema-validator.js';
+import type { ContentSchema } from './schema-validator.js';
 import type { ContentTypeSpec } from './schemas.js';
-import { CONTENT_SCHEMAS, ENGINE_MECHANICS } from './schemas.js';
+import { CONTENT_SCHEMAS, ENGINE_MECHANIC_PARAMS, ENGINE_MECHANICS } from './schemas.js';
 import { isValidRange, satisfies } from './semver.js';
 
 /** The engine version packs declare compatibility against (DATA-FR-016). */
@@ -35,6 +36,12 @@ export interface LoadPackOptions {
   readonly engineVersion?: string;
   /** Known mechanic type ids; plugins extend this catalog (DATA-FR-009). */
   readonly knownMechanics?: readonly string[];
+  /**
+   * Params schema per mechanic id (issue #33): a metaphor's `params` must
+   * satisfy its mechanic's schema where one is published; a mechanic
+   * without an entry accepts any params shape.
+   */
+  readonly mechanicParams?: Readonly<Record<string, ContentSchema>>;
 }
 
 /** One resolved content entity: its type, source document, and frozen data. */
@@ -123,6 +130,7 @@ function parseDocument(file: string, text: string, out: Diagnostic[]): JsonRecor
 export function validatePack(files: PackFiles, options: LoadPackOptions = {}): ValidatePackResult {
   const engineVersion = options.engineVersion ?? ENGINE_VERSION;
   const knownMechanics = options.knownMechanics ?? ENGINE_MECHANICS;
+  const mechanicParams = options.mechanicParams ?? ENGINE_MECHANIC_PARAMS;
   const diagnostics: Diagnostic[] = [];
 
   // Manifest first: without it there is no pack (DATA-FR-001).
@@ -345,6 +353,16 @@ export function validatePack(files: PackFiles, options: LoadPackOptions = {}): V
             'DATA-FR-009',
           ),
         );
+      } else {
+        // A known mechanic that publishes a params schema constrains the
+        // metaphor's `params` at load, with field-level diagnostics
+        // (issue #33; docs/03 edge case). No schema means any shape.
+        const paramsSchema = mechanicParams[mechanic];
+        if (paramsSchema !== undefined) {
+          diagnostics.push(
+            ...validateAgainstSchema(entry.doc['params'] ?? {}, paramsSchema, entry.file, 'params'),
+          );
+        }
       }
     }
     if (entry.spec.schemaType === 'dialogue') {

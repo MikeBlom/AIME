@@ -13,7 +13,12 @@ export type {
   ValidatePackResult,
 } from './loader.js';
 
-export { CONTENT_SCHEMAS, ENGINE_MECHANICS, ID_PATTERN } from './schemas.js';
+export {
+  CONTENT_SCHEMAS,
+  ENGINE_MECHANIC_PARAMS,
+  ENGINE_MECHANICS,
+  ID_PATTERN,
+} from './schemas.js';
 export type { ContentTypeSpec, ExtractedKey, ExtractedRef } from './schemas.js';
 
 export { validateAgainstSchema } from './schema-validator.js';
