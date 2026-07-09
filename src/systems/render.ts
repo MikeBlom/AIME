@@ -89,8 +89,9 @@ const REGION_COLORS: ReadonlyMap<string, string> = new Map([
   ['online', THEME.palette.regionOnline],
 ]);
 const REGION_BORDER_COLOR = THEME.palette.regionBorder;
-/** Fill per generic renderable kind (rect fallback when no sprite). */
-const KIND_COLORS: { readonly [kind: string]: string } = THEME.palette.kind;
+/** Fill per generic renderable kind (rect fallback when no sprite). A Map
+ * so content-supplied kind strings never resolve prototype members. */
+const KIND_COLORS: ReadonlyMap<string, string> = new Map(Object.entries(THEME.palette.kind));
 const FALLBACK_COLOR = THEME.palette.kindFallback;
 /** Space-transition cover color (rgb of the backdrop; alpha varies). */
 const TRANSITION_RGB = THEME.palette.transitionRgb;
@@ -250,7 +251,7 @@ export function renderFrame(
     if (address !== undefined) {
       render.drawSprite(address, x, y, width, height);
     } else {
-      render.fillRect(x, y, width, height, KIND_COLORS[renderable.kind] ?? FALLBACK_COLOR);
+      render.fillRect(x, y, width, height, KIND_COLORS.get(renderable.kind) ?? FALLBACK_COLOR);
     }
   }
 
