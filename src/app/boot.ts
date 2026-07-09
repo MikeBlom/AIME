@@ -14,6 +14,7 @@ import {
   animationPoses,
   createAnimationPlugin,
   createAudioPlugin,
+  createBuildingPlugin,
   createCameraPlugin,
   createDialoguePlugin,
   createEnvironmentPlugin,
@@ -88,6 +89,9 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
   // character motion inside the same step's constraint sweep.
   registry.register(createNpcPlugin());
   registry.register(physicsPlugin);
+  // After physics: the Buildings System consumes the doorway occupancy the
+  // constraint pass settled this step (issue #30).
+  registry.register(createBuildingPlugin());
   registry.register(createWorldSimPlugin());
   registry.register(createEnvironmentPlugin());
   registry.register(createQuestPlugin());

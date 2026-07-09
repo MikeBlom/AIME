@@ -34,6 +34,29 @@ export {
 } from './audio';
 export type { AudioSettings } from './audio';
 export {
+  BUILDING,
+  BUILDING_ENTERED,
+  BUILDING_EXITED,
+  createBuildingPlugin,
+  createBuildingSystem,
+  DOORWAY,
+  DOORWAY_SIZE,
+  INTERACTION_POINT,
+  interiorOrigin,
+  interiorSpawn,
+  readInterior,
+  TRANSITION_SECONDS,
+  WALL_THICKNESS,
+} from './building';
+export type {
+  BuildingDefinition,
+  Doorway,
+  InteractionPoint,
+  InteriorDefinition,
+  InteriorPoint,
+  InteriorRect,
+} from './building';
+export {
   CAMERA_FOLLOW,
   CAMERA_ZOOM_REQUESTED,
   clampToRegionExtents,
@@ -145,6 +168,8 @@ export {
 } from './render';
 export type { AssetManifest, Camera, EnvironmentLight, RenderMotion } from './render';
 export {
+  ACTIVE_SPACE,
+  activeSpaceOf,
   fitTransform,
   IDLE_MOTION,
   LOGICAL_SPACE,
@@ -159,14 +184,19 @@ export {
   RENDERABLE,
   readControls,
   scenePlugin,
+  SPACE,
+  SPACE_EXTERIOR,
+  spaceOf,
 } from './scene';
 export type {
+  ActiveSpace,
   ControlSnapshot,
   Motion,
   PlayerControlled,
   Position,
   RegionState,
   Renderable,
+  Space,
 } from './scene';
 export {
   applySave,

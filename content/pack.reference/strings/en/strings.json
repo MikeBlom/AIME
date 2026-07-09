@@ -5,6 +5,8 @@
   "entries": {
     "region.arrival.name": "PLACEHOLDER The Arrival Yard",
     "building.control-house.name": "PLACEHOLDER The Control House",
+    "building.control-house.point.console": "PLACEHOLDER A dormant control console hums faintly",
+    "building.control-house.point.archive": "PLACEHOLDER Shelves of weathered operations logbooks",
     "npc.foreman.name": "PLACEHOLDER The Foreman",
     "quest.restore-power.title": "PLACEHOLDER Wake the Yard",
     "quest.restore-power.obj.route": "PLACEHOLDER Route power through the yard",

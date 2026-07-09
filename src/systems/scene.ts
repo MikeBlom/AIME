@@ -10,7 +10,7 @@
  * surface pixels, and input is normalized back into logical units before
  * the simulation ever sees it (FR-ARCH-023).
  */
-import type { ComponentData, Plugin } from '../core';
+import type { ComponentData, EntityId, EntityStore, Plugin } from '../core';
 import { defineComponentType, defineEventType } from '../core';
 
 /** The fixed logical simulation space, in logical units. */
@@ -76,6 +76,55 @@ export const RENDERABLE = defineComponentType<Renderable>('renderable');
 export type RegionState = { readonly contentId: string; readonly state: string };
 export const REGION = defineComponentType<RegionState>('region');
 
+/**
+ * The space id every spatial entity inhabits when it carries no SPACE
+ * component: the region's outdoor space. Interior spaces are named by the
+ * content id of the building that contains them — pack data, never code.
+ */
+export const SPACE_EXTERIOR = 'space.exterior';
+
+/**
+ * Which space a spatial entity inhabits. Spaces partition the one logical
+ * simulation space into coexisting populations (the exterior, each building
+ * interior): systems that relate entities spatially — collision, prompts,
+ * interaction, drawing — only relate entities sharing a space. Absent means
+ * the exterior, so worlds without a Buildings System are unchanged
+ * (FR-ARCH-008).
+ */
+export type Space = { readonly space: string };
+export const SPACE = defineComponentType<Space>('space');
+
+/**
+ * The world's active space slice: which space presentation follows (the
+ * player's), plus the running enter/exit transition and its bookkeeping.
+ * Shared scene vocabulary like REGION; the Buildings System is its sole
+ * writer (FR-ARCH-015). `returnX/returnY` remember where the player stood
+ * outside; `armed` gates doorway triggers until the player has stepped off
+ * them, so a completed transition never immediately re-fires.
+ */
+export type ActiveSpace = {
+  readonly space: string;
+  readonly transition: { readonly to: string; readonly progress: number } | null;
+  readonly returnX: number | null;
+  readonly returnY: number | null;
+  readonly armed: boolean;
+};
+export const ACTIVE_SPACE = defineComponentType<ActiveSpace>('active-space');
+
+/** The entity's space, the exterior when it carries no SPACE component. */
+export function spaceOf(world: EntityStore, entity: EntityId): string {
+  return world.getComponent(entity, SPACE)?.space ?? SPACE_EXTERIOR;
+}
+
+/** The world's active space, the exterior when no System owns the slice. */
+export function activeSpaceOf(world: EntityStore): ActiveSpace {
+  for (const entity of world.query(ACTIVE_SPACE)) {
+    const active = world.getComponent(entity, ACTIVE_SPACE);
+    if (active !== undefined) return active;
+  }
+  return { space: SPACE_EXTERIOR, transition: null, returnX: null, returnY: null, armed: true };
+}
+
 /** Announced once the world has spawned into a region. */
 export const REGION_ENTERED = defineEventType<{ readonly regionId: string }>('region.entered');
 
@@ -129,7 +178,7 @@ export function pointerToLogical(
 export const scenePlugin: Plugin = {
   id: 'plugin.scene',
   systems: [],
-  componentTypes: [RENDERABLE, REGION],
+  componentTypes: [RENDERABLE, REGION, SPACE, ACTIVE_SPACE],
   eventTypes: [REGION_ENTERED],
 };
 

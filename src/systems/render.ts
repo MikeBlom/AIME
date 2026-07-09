@@ -20,7 +20,15 @@ import type { EntityId, EntityStore, Plugin, System, SystemContext } from '../co
 import { defineComponentType } from '../core';
 import type { RenderSurface } from '../platform';
 import type { Position, Renderable } from './scene';
-import { fitTransform, LOGICAL_SPACE, POSITION, REGION, RENDERABLE } from './scene';
+import {
+  activeSpaceOf,
+  fitTransform,
+  LOGICAL_SPACE,
+  POSITION,
+  REGION,
+  RENDERABLE,
+  spaceOf,
+} from './scene';
 
 /**
  * The view: logical center the surface looks at plus a zoom multiplier on
@@ -60,6 +68,10 @@ export const ENVIRONMENT_LIGHT = defineComponentType<EnvironmentLight>('environm
 /** Default draw layer per generic renderable kind; `layer` overrides. */
 const KIND_LAYERS: ReadonlyMap<string, number> = new Map([
   ['building', 0],
+  ['wall', 0],
+  ['doorway', 1],
+  ['furnishing', 2],
+  ['poi', 3],
   ['npc', 10],
   ['player', 20],
 ]);
@@ -78,8 +90,14 @@ const KIND_COLORS: ReadonlyMap<string, string> = new Map([
   ['player', '#7ec8ff'],
   ['building', '#415062'],
   ['npc', '#c9a86a'],
+  ['wall', '#2c3a4a'],
+  ['doorway', '#8a97a5'],
+  ['furnishing', '#4a5a6e'],
+  ['poi', '#9fd6a8'],
 ]);
 const FALLBACK_COLOR = '#5a6675';
+/** Space-transition cover color (rgb of the backdrop; alpha varies). */
+const TRANSITION_RGB = '6, 8, 12';
 
 export const renderSystem: System = {
   id: 'render',
@@ -199,8 +217,12 @@ export function renderFrame(
       .map((entity) => world.getComponent(entity, ASSET_MANIFEST)?.entries)
       .find((entries) => entries !== undefined) ?? {};
 
+  // Only the active space's population draws: the exterior while outdoors,
+  // one interior while inside (issue #30); other spaces coexist unseen.
+  const activeSpace = activeSpaceOf(world);
   const drawables = world
     .query(POSITION, RENDERABLE)
+    .filter((entity) => spaceOf(world, entity) === activeSpace.space)
     .map((entity) => ({
       entity,
       position: world.getComponent(entity, POSITION),
@@ -251,6 +273,18 @@ export function renderFrame(
       LOGICAL_SPACE.height * scale,
       tint,
     );
+  }
+
+  // The space-transition cover (issue #30): fade to full dark toward the
+  // swap at the transition's midpoint, then back in — the polish that hides
+  // the population change. Reads world state only; absent draws nothing.
+  if (activeSpace.transition !== null) {
+    const progress = activeSpace.transition.progress;
+    const alpha = Math.min(1, Math.max(0, progress < 0.5 ? progress * 2 : (1 - progress) * 2));
+    if (alpha > 0) {
+      const surface = render.size();
+      render.fillRect(0, 0, surface.width, surface.height, `rgba(${TRANSITION_RGB}, ${alpha})`);
+    }
   }
 }
 

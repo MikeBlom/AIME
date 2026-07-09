@@ -38,7 +38,7 @@ import { TIME_PHASE_CHANGED } from './audio';
 import { DIALOGUE_START_REQUESTED } from './dialogue';
 import { INTENT_INTERACT } from './input';
 import type { Motion, Position } from './scene';
-import { IDLE_MOTION, LOGICAL_SPACE, MOTION, PLAYER_CONTROLLED, POSITION } from './scene';
+import { IDLE_MOTION, LOGICAL_SPACE, MOTION, PLAYER_CONTROLLED, POSITION, spaceOf } from './scene';
 import { PROMPT_RADIUS, UI_STATE } from './ui';
 
 /**
@@ -115,11 +115,11 @@ function uiIsModal(world: EntityStore): boolean {
   return false;
 }
 
-/** The player's position, from the first player-controlled entity. */
-function playerPosition(world: EntityStore): Position | null {
+/** The player's entity and position, from the first player-controlled one. */
+function playerView(world: EntityStore): { entity: EntityId; position: Position } | null {
   for (const entity of world.query(PLAYER_CONTROLLED, POSITION)) {
     const position = world.getComponent(entity, POSITION);
-    if (position !== undefined) return position;
+    if (position !== undefined) return { entity, position };
   }
   return null;
 }
@@ -235,18 +235,21 @@ export function createNpcSystem(): System {
   const interact = (context: SystemContext): void => {
     const world = context.world;
     if (uiIsModal(world)) return; // the surface owns the press (FR-NPC-008)
-    const player = playerPosition(world);
+    const player = playerView(world);
     if (player === null) return;
+    const playerSpace = spaceOf(world, player.entity);
 
     let nearest: EntityId | null = null;
     let nearestDistanceSq = NPC_INTERACT_RADIUS * NPC_INTERACT_RADIUS;
     // Ascending entity order makes the tie-break deterministic: the first
     // strictly-nearer character wins, equal distance keeps the lower id.
     for (const entity of world.query(NPC, POSITION)) {
+      // A character in another space is out of reach (issue #30).
+      if (spaceOf(world, entity) !== playerSpace) continue;
       const position = world.getComponent(entity, POSITION);
       if (position === undefined) continue;
-      const dx = position.x - player.x;
-      const dy = position.y - player.y;
+      const dx = position.x - player.position.x;
+      const dy = position.y - player.position.y;
       const distanceSq = dx * dx + dy * dy;
       if (
         distanceSq < nearestDistanceSq ||
