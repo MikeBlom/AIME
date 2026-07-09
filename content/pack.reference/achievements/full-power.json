@@ -1,0 +1,8 @@
+{
+  "schemaType": "achievement",
+  "schemaVersion": "1.0.0",
+  "id": "achievement.full-power",
+  "titleKey": "achievement.full-power.title",
+  "descriptionKey": "achievement.full-power.description",
+  "unlock": { "kind": "restored-count", "count": 3 }
+}

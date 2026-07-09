@@ -1,0 +1,14 @@
+{
+  "schemaType": "region",
+  "schemaVersion": "1.0.0",
+  "id": "region.harbor",
+  "displayNameKey": "region.harbor.name",
+  "state": { "initial": "offline" },
+  "bounds": { "note": "PLACEHOLDER a fogbound harbor with one dark lighthouse" },
+  "contains": {
+    "buildings": ["building.lighthouse"],
+    "npcs": ["npc.keeper"],
+    "quests": ["quest.light-the-beacon"]
+  },
+  "ambient": { "weatherProfile": "maritime", "dayNight": true }
+}

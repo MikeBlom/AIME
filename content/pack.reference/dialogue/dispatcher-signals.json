@@ -1,0 +1,35 @@
+{
+  "schemaType": "dialogue",
+  "schemaVersion": "1.0.0",
+  "id": "dialogue.dispatcher-signals",
+  "nodes": [
+    {
+      "id": "n1",
+      "textKey": "dialogue.dispatcher-signals.n1",
+      "choices": [
+        {
+          "textKey": "dialogue.dispatcher-signals.n1.solve",
+          "goto": "n-solved",
+          "resolves": {
+            "questRef": "quest.conduct-the-yard",
+            "objectiveId": "obj.conduct-signals",
+            "outcome": "solved"
+          }
+        },
+        {
+          "textKey": "dialogue.dispatcher-signals.n1.bypass",
+          "goto": "n-bypassed",
+          "resolves": {
+            "questRef": "quest.conduct-the-yard",
+            "objectiveId": "obj.conduct-signals",
+            "outcome": "bypassed"
+          }
+        },
+        { "textKey": "dialogue.dispatcher-signals.n1.leave", "goto": "n-leave" }
+      ]
+    },
+    { "id": "n-solved", "textKey": "dialogue.dispatcher-signals.solved", "end": true },
+    { "id": "n-bypassed", "textKey": "dialogue.dispatcher-signals.bypassed", "end": true },
+    { "id": "n-leave", "textKey": "dialogue.dispatcher-signals.leave", "end": true }
+  ]
+}

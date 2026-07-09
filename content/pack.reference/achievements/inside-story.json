@@ -1,0 +1,8 @@
+{
+  "schemaType": "achievement",
+  "schemaVersion": "1.0.0",
+  "id": "achievement.inside-story",
+  "titleKey": "achievement.inside-story.title",
+  "descriptionKey": "achievement.inside-story.description",
+  "unlock": { "kind": "building-entered", "ref": "building.control-house" }
+}

@@ -1,0 +1,35 @@
+{
+  "schemaType": "dialogue",
+  "schemaVersion": "1.0.0",
+  "id": "dialogue.engineer-line",
+  "nodes": [
+    {
+      "id": "n1",
+      "textKey": "dialogue.engineer-line.n1",
+      "choices": [
+        {
+          "textKey": "dialogue.engineer-line.n1.solve",
+          "goto": "n-solved",
+          "resolves": {
+            "questRef": "quest.rebuild-the-line",
+            "objectiveId": "obj.assemble-line",
+            "outcome": "solved"
+          }
+        },
+        {
+          "textKey": "dialogue.engineer-line.n1.bypass",
+          "goto": "n-bypassed",
+          "resolves": {
+            "questRef": "quest.rebuild-the-line",
+            "objectiveId": "obj.assemble-line",
+            "outcome": "bypassed"
+          }
+        },
+        { "textKey": "dialogue.engineer-line.n1.leave", "goto": "n-leave" }
+      ]
+    },
+    { "id": "n-solved", "textKey": "dialogue.engineer-line.solved", "end": true },
+    { "id": "n-bypassed", "textKey": "dialogue.engineer-line.bypassed", "end": true },
+    { "id": "n-leave", "textKey": "dialogue.engineer-line.leave", "end": true }
+  ]
+}

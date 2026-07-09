@@ -1,0 +1,26 @@
+{
+  "schemaType": "quest",
+  "schemaVersion": "1.0.0",
+  "id": "quest.light-the-beacon",
+  "titleKey": "quest.light-the-beacon.title",
+  "regionRef": "region.harbor",
+  "metaphorRef": "metaphor.steady-guidance",
+  "objectives": [
+    {
+      "id": "obj.time-the-lamp",
+      "descriptionKey": "quest.light-the-beacon.obj.time"
+    }
+  ],
+  "onComplete": {
+    "emits": ["SystemRestored"],
+    "revealsKey": "quest.light-the-beacon.reveal",
+    "worldEffect": "PLACEHOLDER region.harbor -> online",
+    "grants": {
+      "capabilities": ["capability.beacon-watch"]
+    }
+  },
+  "bypass": {
+    "allowed": true,
+    "revealsKey": "quest.light-the-beacon.reveal"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "schemaType": "achievement",
+  "schemaVersion": "1.0.0",
+  "id": "achievement.beacon-lit",
+  "titleKey": "achievement.beacon-lit.title",
+  "descriptionKey": "achievement.beacon-lit.description",
+  "unlock": { "kind": "restored-count", "count": 1 }
+}

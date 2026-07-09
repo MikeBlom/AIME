@@ -35,17 +35,73 @@ describe('minimal reference pack (issue #13)', () => {
     expect(graph?.byType.get('region')?.has('region.arrival')).toBe(true);
   });
 
-  it('ships one region, one NPC, and one quest with a bypass block (deliverables)', () => {
+  it('ships the full arc: regions, NPCs, and quests, every quest with a bypass (issue #35)', () => {
     const { graph } = loadReferencePack();
-    expect(graph?.byType.get('region')?.size).toBe(1);
-    expect(graph?.byType.get('npc')?.size).toBe(1);
-    expect(graph?.byType.get('quest')?.size).toBe(1);
+    expect(graph?.byType.get('region')?.size).toBe(3);
+    expect(graph?.byType.get('npc')?.size).toBe(3);
+    expect(graph?.byType.get('quest')?.size).toBe(3);
+    expect(graph?.byType.get('building')?.size).toBe(3);
+    expect(graph?.byType.get('achievement')?.size).toBe(4);
 
-    const [quest] = graph?.byType.get('quest')?.values() ?? [];
-    const bypass = quest?.doc['bypass'];
-    // FR-VIS-010: a player who cannot solve the puzzle still gets the meaning.
-    expect(bypass).toMatchObject({ allowed: true });
-    expect(typeof bypass?.['revealsKey']).toBe('string');
+    for (const quest of graph?.byType.get('quest')?.values() ?? []) {
+      const bypass = quest.doc['bypass'];
+      // FR-VIS-010: a player who cannot solve any puzzle still gets its meaning.
+      expect(bypass, quest.id).toMatchObject({ allowed: true });
+      expect(typeof bypass?.['revealsKey'], quest.id).toBe('string');
+    }
+  });
+
+  it('binds each quest to a distinct catalog mechanic through its metaphor (issue #35)', () => {
+    const { graph } = loadReferencePack();
+    const mechanics = [];
+    for (const quest of graph?.byType.get('quest')?.values() ?? []) {
+      const metaphorRef = quest.doc['metaphorRef'];
+      expect(typeof metaphorRef, quest.id).toBe('string');
+      const metaphor = graph?.byType.get('metaphor')?.get(metaphorRef);
+      expect(metaphor, `${quest.id} -> ${metaphorRef}`).toBeDefined();
+      mechanics.push(metaphor?.doc['mechanic']);
+    }
+    expect([...mechanics].sort()).toEqual([
+      'engine.mechanic.assembly',
+      'engine.mechanic.orchestrate',
+      'engine.mechanic.route-and-balance',
+    ]);
+  });
+
+  it('carries the short-visit path: the start region contains every quest (FR-VIS-008)', () => {
+    const { graph } = loadReferencePack();
+    const start = graph?.byType.get('region')?.get(graph.startRegion);
+    const quests = start?.doc['contains']?.['quests'] ?? [];
+    // The headliner comes first; depth sits behind it, never in front.
+    expect(quests[0]).toBe('quest.restore-power');
+    expect([...quests].sort()).toEqual([
+      'quest.conduct-the-yard',
+      'quest.rebuild-the-line',
+      'quest.restore-power',
+    ]);
+  });
+
+  it('wires every dialogue resolve hook to a real quest objective (issue #35)', () => {
+    const { graph } = loadReferencePack();
+    const resolvesOf = (record) =>
+      record !== null && typeof record === 'object' ? record['resolves'] : undefined;
+    let hooks = 0;
+    for (const dialogue of graph?.byType.get('dialogue')?.values() ?? []) {
+      for (const node of dialogue.doc['nodes'] ?? []) {
+        for (const hook of [resolvesOf(node), ...(node['choices'] ?? []).map(resolvesOf)]) {
+          if (hook === undefined) continue;
+          hooks += 1;
+          const quest = graph?.byType.get('quest')?.get(hook['questRef']);
+          expect(quest, `${dialogue.id} -> ${hook['questRef']}`).toBeDefined();
+          const objectiveIds = (quest?.doc['objectives'] ?? []).map((objective) => objective['id']);
+          expect(objectiveIds, `${dialogue.id} -> ${hook['questRef']}`).toContain(
+            hook['objectiveId'],
+          );
+        }
+      }
+    }
+    // Every quest offers both the in-fiction solve and the in-fiction bypass.
+    expect(hooks).toBe(6);
   });
 
   it('resolves every player-visible string via a default-locale key (AC2, DATA-FR-011)', () => {

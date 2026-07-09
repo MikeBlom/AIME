@@ -1,0 +1,21 @@
+{
+  "schemaType": "npc",
+  "schemaVersion": "1.0.0",
+  "id": "npc.dispatcher",
+  "displayNameKey": "npc.dispatcher.name",
+  "appearance": { "assetRef": "asset.npc.dispatcher" },
+  "routine": [
+    {
+      "phase": "day",
+      "activity": "PLACEHOLDER pace the platform watching the boards",
+      "waypoints": [
+        { "x": 62, "y": 112 },
+        { "x": 98, "y": 112 }
+      ],
+      "speed": 22
+    },
+    { "phase": "night", "activity": "PLACEHOLDER rest location" }
+  ],
+  "dialogueRef": "dialogue.dispatcher-signals",
+  "role": "PLACEHOLDER keeper of the signals quest"
+}

@@ -1,0 +1,9 @@
+{
+  "schemaType": "metaphor",
+  "schemaVersion": "1.0.0",
+  "id": "metaphor.systems-craftsmanship",
+  "accomplishment": "PLACEHOLDER: a build-it-right accomplishment; author-facing note only, never rendered",
+  "mechanic": "engine.mechanic.assembly",
+  "params": { "slots": [1, 0, 2], "choices": 3 },
+  "framingKey": "metaphor.systems-craftsmanship.framing"
+}

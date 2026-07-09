@@ -1,0 +1,9 @@
+{
+  "schemaType": "region",
+  "schemaVersion": "1.0.0",
+  "id": "region.workshop-row",
+  "displayNameKey": "region.workshop-row.name",
+  "state": { "initial": "offline" },
+  "bounds": { "note": "PLACEHOLDER the fabrication district behind the arrival yard" },
+  "ambient": { "weatherProfile": "temperate", "dayNight": true }
+}

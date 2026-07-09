@@ -10,6 +10,8 @@
     "audio.ambient.region.arrival.offline": "assets/audio/placeholder-ambient-offline.ogg",
     "audio.ambient.region.arrival.online": "assets/audio/placeholder-ambient-online.ogg",
     "audio.ambient.default": "assets/audio/placeholder-ambient.ogg",
-    "audio.music.default": "assets/audio/placeholder-music.ogg"
+    "audio.music.default": "assets/audio/placeholder-music.ogg",
+    "asset.npc.engineer": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAMCAYAAABfnvydAAAAHElEQVR4nGOYVuH2Hx9moFzByRVZ//HhUQUQDACLigUoKZ9hSwAAAABJRU5ErkJggg==",
+    "asset.npc.dispatcher": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAMCAYAAABfnvydAAAAHElEQVR4nGOYVuH2Hx9moFzByRVZ//HhUQUQDACLigUoKZ9hSwAAAABJRU5ErkJggg=="
   }
 }

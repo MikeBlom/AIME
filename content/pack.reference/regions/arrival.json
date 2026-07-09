@@ -6,9 +6,9 @@
   "state": { "initial": "offline" },
   "bounds": { "note": "PLACEHOLDER spatial description consumed by World Design" },
   "contains": {
-    "buildings": ["building.control-house"],
-    "npcs": ["npc.foreman"],
-    "quests": ["quest.restore-power"]
+    "buildings": ["building.control-house", "building.signal-tower", "building.workshop"],
+    "npcs": ["npc.dispatcher", "npc.engineer", "npc.foreman"],
+    "quests": ["quest.restore-power", "quest.rebuild-the-line", "quest.conduct-the-yard"]
   },
   "ambient": { "weatherProfile": "temperate", "dayNight": true }
 }

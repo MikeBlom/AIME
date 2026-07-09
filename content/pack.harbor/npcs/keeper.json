@@ -1,0 +1,21 @@
+{
+  "schemaType": "npc",
+  "schemaVersion": "1.0.0",
+  "id": "npc.keeper",
+  "displayNameKey": "npc.keeper.name",
+  "appearance": { "assetRef": "asset.npc.keeper" },
+  "routine": [
+    {
+      "phase": "day",
+      "activity": "PLACEHOLDER walk the quay checking the moorings",
+      "waypoints": [
+        { "x": 130, "y": 112 },
+        { "x": 190, "y": 112 }
+      ],
+      "speed": 16
+    },
+    { "phase": "night", "activity": "PLACEHOLDER rest location" }
+  ],
+  "dialogueRef": "dialogue.keeper-intro",
+  "role": "PLACEHOLDER keeper of the beacon quest"
+}

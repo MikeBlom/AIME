@@ -1,0 +1,25 @@
+{
+  "schemaType": "building",
+  "schemaVersion": "1.0.0",
+  "id": "building.signal-tower",
+  "displayNameKey": "building.signal-tower.name",
+  "interior": {
+    "size": { "width": 120, "height": 120 },
+    "spawn": { "x": 60, "y": 96 },
+    "colliders": [{ "x": 60, "y": 30, "width": 44, "height": 14 }],
+    "points": [
+      {
+        "id": "point.board",
+        "hintKey": "building.signal-tower.point.board",
+        "x": 60,
+        "y": 44
+      },
+      {
+        "id": "point.ledger",
+        "hintKey": "building.signal-tower.point.ledger",
+        "x": 100,
+        "y": 72
+      }
+    ]
+  }
+}

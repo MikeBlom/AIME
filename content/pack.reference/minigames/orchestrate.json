@@ -1,0 +1,7 @@
+{
+  "schemaType": "minigame",
+  "schemaVersion": "1.0.0",
+  "id": "minigame.orchestrate",
+  "displayNameKey": "minigame.orchestrate.name",
+  "plugin": "plugin.engine.mechanic.orchestrate"
+}

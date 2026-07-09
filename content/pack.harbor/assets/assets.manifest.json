@@ -1,0 +1,10 @@
+{
+  "schemaType": "assets",
+  "schemaVersion": "1.0.0",
+  "id": "assets.manifest",
+  "entries": {
+    "asset.npc.keeper": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAMCAYAAABfnvydAAAAHElEQVR4nGOYVuH2Hx9moFzByRVZ//HhUQUQDACLigUoKZ9hSwAAAABJRU5ErkJggg==",
+    "audio.ambient.default": "assets/audio/placeholder-ambient.ogg",
+    "audio.music.default": "assets/audio/placeholder-music.ogg"
+  }
+}
