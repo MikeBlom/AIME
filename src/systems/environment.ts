@@ -22,6 +22,7 @@
  */
 import type { EntityStore, Plugin, System, SystemContext } from '../core';
 import { defineComponentType, defineEventType } from '../core';
+import { THEME } from '../style';
 import { TIME_PHASE_CHANGED } from './audio';
 import { ENVIRONMENT_LIGHT } from './render';
 
@@ -61,8 +62,10 @@ export const PHASE_NIGHT = 'night';
 export const DAY_SECONDS = 60;
 export const NIGHT_SECONDS = 60;
 
-/** The night lighting hook written to ENVIRONMENT_LIGHT; day is null. */
-export const NIGHT_TINT = 'rgba(10, 14, 34, 0.35)';
+/** The night lighting hook written to ENVIRONMENT_LIGHT; day is null.
+ * The value is the theme's night role (FR-ART-004); this System owns
+ * when the tint applies, the theme owns what night looks like. */
+export const NIGHT_TINT = THEME.palette.nightTint;
 
 /** Weather redraw window (seconds), drawn uniformly per change. */
 export const WEATHER_MIN_SECONDS = 45;

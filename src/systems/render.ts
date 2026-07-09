@@ -19,6 +19,7 @@
 import type { EntityId, EntityStore, Plugin, System, SystemContext } from '../core';
 import { defineComponentType } from '../core';
 import type { RenderSurface } from '../platform';
+import { THEME } from '../style';
 import type { Position, Renderable } from './scene';
 import {
   activeSpaceOf,
@@ -77,27 +78,22 @@ const KIND_LAYERS: ReadonlyMap<string, number> = new Map([
 ]);
 const FALLBACK_LAYER = 5;
 
-/** Letterbox backdrop outside the logical viewport. */
-const BACKDROP_COLOR = '#06080c';
+/**
+ * Every color below resolves from the theme by named role (FR-ART-001);
+ * this System owns which role each drawn thing plays, never the values.
+ */
+const BACKDROP_COLOR = THEME.palette.backdrop;
 /** Region background by live state; unknown states fall back to offline. */
 const REGION_COLORS: ReadonlyMap<string, string> = new Map([
-  ['offline', '#131a24'],
-  ['online', '#1d2b26'],
+  ['offline', THEME.palette.regionOffline],
+  ['online', THEME.palette.regionOnline],
 ]);
-const REGION_BORDER_COLOR = '#2c3a4a';
-/** Fill colors by generic renderable kind (rect fallback when no sprite). */
-const KIND_COLORS: ReadonlyMap<string, string> = new Map([
-  ['player', '#7ec8ff'],
-  ['building', '#415062'],
-  ['npc', '#c9a86a'],
-  ['wall', '#2c3a4a'],
-  ['doorway', '#8a97a5'],
-  ['furnishing', '#4a5a6e'],
-  ['poi', '#9fd6a8'],
-]);
-const FALLBACK_COLOR = '#5a6675';
+const REGION_BORDER_COLOR = THEME.palette.regionBorder;
+/** Fill per generic renderable kind (rect fallback when no sprite). */
+const KIND_COLORS: { readonly [kind: string]: string } = THEME.palette.kind;
+const FALLBACK_COLOR = THEME.palette.kindFallback;
 /** Space-transition cover color (rgb of the backdrop; alpha varies). */
-const TRANSITION_RGB = '6, 8, 12';
+const TRANSITION_RGB = THEME.palette.transitionRgb;
 
 export const renderSystem: System = {
   id: 'render',
@@ -254,7 +250,7 @@ export function renderFrame(
     if (address !== undefined) {
       render.drawSprite(address, x, y, width, height);
     } else {
-      render.fillRect(x, y, width, height, KIND_COLORS.get(renderable.kind) ?? FALLBACK_COLOR);
+      render.fillRect(x, y, width, height, KIND_COLORS[renderable.kind] ?? FALLBACK_COLOR);
     }
   }
 

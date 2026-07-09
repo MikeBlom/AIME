@@ -34,6 +34,7 @@
  */
 import type { ComponentData, EntityId, EntityStore, Plugin, System, SystemContext } from '../core';
 import { defineComponentType, defineEventType } from '../core';
+import { THEME } from '../style';
 import { COLLIDER, TRIGGER_OCCUPANCY } from './physics';
 import type { ActiveSpace } from './scene';
 import {
@@ -108,8 +109,9 @@ export const BUILDING_EXITED = defineEventType<{
   readonly entityId: number;
 }>('building.exited');
 
-/** Enter/exit fade length in seconds; the swap lands at the midpoint. */
-export const TRANSITION_SECONDS = 0.6;
+/** Enter/exit fade length in seconds; the swap lands at the midpoint.
+ * The length is the theme's motion token (FR-ART-005). */
+export const TRANSITION_SECONDS = THEME.motion.spaceTransitionSeconds;
 
 /** Engine geometry defaults, in logical units. Room layout is content. */
 export const WALL_THICKNESS = 4;

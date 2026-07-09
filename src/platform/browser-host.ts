@@ -10,6 +10,8 @@
  * entry module in a host-free environment (tests, tooling) is harmless.
  */
 
+import { THEME } from '../style';
+
 export interface BrowserHost {
   readonly canvas: HTMLCanvasElement;
   /** Replace the debug overlay's text block. */
@@ -41,8 +43,8 @@ export function mountBrowserHost(): BrowserHost | null {
   overlay.style.margin = '0';
   overlay.style.padding = '6px 8px';
   overlay.style.font = '10px/1.4 monospace';
-  overlay.style.color = '#9fb3c8';
-  overlay.style.background = 'rgba(6, 8, 12, 0.75)';
+  overlay.style.color = THEME.palette.overlayText;
+  overlay.style.background = THEME.palette.overlayScrim;
   overlay.style.pointerEvents = 'none';
   overlay.style.whiteSpace = 'pre';
   overlay.style.zIndex = '10';

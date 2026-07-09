@@ -9,6 +9,7 @@
  * beds, volumes under a master level. Full mixing (stereo pan and beyond)
  * upgrades to WebAudio inside this layer only.
  */
+import { THEME } from '../style';
 import type {
   AudioOutput,
   InputDevice,
@@ -78,7 +79,7 @@ function createRenderSurface(canvas: HTMLCanvasElement): RenderSurface {
       context.drawImage(image, x, y, width ?? image.naturalWidth, height ?? image.naturalHeight);
     },
     drawText: (text, x, y, options) => {
-      context.fillStyle = options?.color ?? '#e6edf3';
+      context.fillStyle = options?.color ?? THEME.palette.text;
       context.font = `${options?.sizePx ?? 14}px system-ui, sans-serif`;
       context.textAlign = options?.align ?? 'left';
       context.textBaseline = 'top';
