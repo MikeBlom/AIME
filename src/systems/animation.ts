@@ -22,6 +22,7 @@
  */
 import type { EntityId, EntityStore, EventPayload, Plugin, System, SystemContext } from '../core';
 import { defineComponentType, defineEventType } from '../core';
+import { THEME } from '../style';
 import { INTENT_INTERACT } from './input';
 import type { Motion } from './scene';
 import { MOTION, PLAYER_CONTROLLED, RENDERABLE } from './scene';
@@ -78,9 +79,10 @@ export const CLIP_WALK = 'walk';
 /** The one-shot clip bound to the interact intent. */
 export const CLIP_INTERACT = 'interact';
 
-/** Engine tuning defaults; per-entity ANIMATABLE data overrides. */
-export const DEFAULT_ANIMATION_FPS = 8;
-export const DEFAULT_ONE_SHOT_SECONDS = 0.4;
+/** Engine tuning defaults (the theme's motion tokens, FR-ART-005);
+ * per-entity ANIMATABLE data overrides. */
+export const DEFAULT_ANIMATION_FPS = THEME.motion.animationFps;
+export const DEFAULT_ONE_SHOT_SECONDS = THEME.motion.oneShotSeconds;
 
 /** Frame probing stops here so a malformed manifest cannot stall a step. */
 const FRAME_PROBE_LIMIT = 64;

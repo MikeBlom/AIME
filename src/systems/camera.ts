@@ -18,6 +18,7 @@
  */
 import type { EntityId, EntityStore, Plugin, System, SystemContext } from '../core';
 import { defineComponentType, defineEventType } from '../core';
+import { THEME } from '../style';
 import type { Camera } from './render';
 import { CAMERA } from './render';
 import { LOGICAL_SPACE, PLAYER_CONTROLLED, POSITION } from './scene';
@@ -36,9 +37,10 @@ export type CameraFollow = {
 };
 export const CAMERA_FOLLOW = defineComponentType<CameraFollow>('camera-follow');
 
-/** Engine defaults: responsive follow, whole-space view. */
+/** Engine defaults: responsive follow (the theme's motion token,
+ * FR-ART-005), whole-space view. */
 export const DEFAULT_CAMERA_FOLLOW: CameraFollow = {
-  damping: 8,
+  damping: THEME.motion.cameraFollowDamping,
   zoomTarget: 1,
   enabled: true,
 };

@@ -23,6 +23,7 @@
 import type { EntityId, EntityStore, EventPayload, Plugin, System, SystemContext } from '../core';
 import { defineComponentType, defineEventType } from '../core';
 import type { RenderSurface } from '../platform';
+import { THEME } from '../style';
 import { INPUT_INTENT, INTENT_INTERACT } from './input';
 import { PLAYER_CONTROLLED, POSITION, RENDERABLE, spaceOf } from './scene';
 
@@ -89,12 +90,13 @@ export const PROMPT_RADIUS = 28;
 /** Renderable kinds that raise the proximity prompt (generic scene roles). */
 const PROMPTING_KINDS: ReadonlySet<string> = new Set(['npc', 'building']);
 
-/** Presentation constants: generic engine chrome, replaced by art direction. */
-const PANEL_COLOR = 'rgba(10, 14, 20, 0.85)';
-const PANEL_EDGE_COLOR = '#2c3a4a';
-const TEXT_COLOR = '#e6edf3';
-const CHOICE_COLOR = '#9fb0c0';
-const CHOICE_SELECTED_COLOR = '#7ec8ff';
+/** Chrome roles resolved from the theme (FR-ART-001): scrim, hairline,
+ * body text, muted choices, and the shared accent for the selection. */
+const PANEL_COLOR = THEME.palette.panel;
+const PANEL_EDGE_COLOR = THEME.palette.panelEdge;
+const TEXT_COLOR = THEME.palette.text;
+const CHOICE_COLOR = THEME.palette.textMuted;
+const CHOICE_SELECTED_COLOR = THEME.palette.accent;
 
 function stringsOf(world: EntityStore): { readonly [key: string]: string } {
   return (
