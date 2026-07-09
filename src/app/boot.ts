@@ -19,6 +19,7 @@ import {
   createDialoguePlugin,
   createEnvironmentPlugin,
   createNpcPlugin,
+  createProgressionPlugin,
   createQuestPlugin,
   createSaveLoadPlugin,
   createUiPlugin,
@@ -95,6 +96,9 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
   registry.register(createWorldSimPlugin());
   registry.register(createEnvironmentPlugin());
   registry.register(createQuestPlugin());
+  // After quest: progression records the resolutions the quest engine
+  // announced this step (issue #31).
+  registry.register(createProgressionPlugin());
   registry.register(createDialoguePlugin());
   registry.register(createAnimationPlugin());
   registry.register(createCameraPlugin());

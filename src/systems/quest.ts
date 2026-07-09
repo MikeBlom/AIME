@@ -46,6 +46,9 @@ export type QuestDefinition = {
   readonly revealsKey: string | null;
   readonly bypassAllowed: boolean;
   readonly bypassRevealsKey: string | null;
+  /** Content-declared completion grants (issue #31); absent means none. */
+  readonly grantsCapabilities?: readonly string[];
+  readonly grantsItems?: readonly string[];
 };
 export const QUEST = defineComponentType<QuestDefinition>('quest');
 

@@ -38,6 +38,7 @@ import type {
 import { defineEventType } from '../core';
 import type { KeyValueStorage } from '../platform';
 import { AUDIO_SETTINGS } from './audio';
+import { PROGRESSION } from './progression';
 import { QUEST_STATE, SYSTEM_RESTORED } from './quest';
 import { CAMERA } from './render';
 import {
@@ -75,6 +76,8 @@ export const PROGRESSION_SLICES: readonly ComponentType<ComponentData>[] = [
   // #30), so a session saved inside a building resumes inside it.
   SPACE,
   ACTIVE_SPACE,
+  // Restored systems, unlocked capabilities, and inventory (issue #31).
+  PROGRESSION,
 ];
 
 /** Gameplay events that trigger an autosave on the following update. */

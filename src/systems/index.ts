@@ -108,6 +108,16 @@ export {
 } from './physics';
 export type { Box, Broadphase, Collider, CollisionContacts, TriggerOccupancy } from './physics';
 export {
+  CAPABILITY_UNLOCKED,
+  createProgressionPlugin,
+  createProgressionSystem,
+  EMPTY_PROGRESSION,
+  ITEM_ADDED,
+  PROGRESSION,
+  PROGRESSION_CHANGED,
+} from './progression';
+export type { Progression } from './progression';
+export {
   createQuestPlugin,
   createQuestSystem,
   initialQuestState,
