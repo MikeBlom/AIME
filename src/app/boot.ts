@@ -15,6 +15,7 @@ import {
   createAnimationPlugin,
   createAudioPlugin,
   createCameraPlugin,
+  createQuestPlugin,
   createSaveLoadPlugin,
   createUiPlugin,
   inputPlugin,
@@ -80,6 +81,7 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
   registry.register(inputPlugin);
   registry.register(movementPlugin);
   registry.register(physicsPlugin);
+  registry.register(createQuestPlugin());
   registry.register(createAnimationPlugin());
   registry.register(createCameraPlugin());
   const saveLoadOptions = { pack: { id: graph.packId, version: graph.packVersion } };

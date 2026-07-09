@@ -38,6 +38,7 @@ import type {
 import { defineEventType } from '../core';
 import type { KeyValueStorage } from '../platform';
 import { AUDIO_SETTINGS } from './audio';
+import { QUEST_STATE, SYSTEM_RESTORED } from './quest';
 import { CAMERA } from './render';
 import { MOTION, MOVEMENT_STOPPED, POSITION, REGION, REGION_ENTERED } from './scene';
 
@@ -52,8 +53,8 @@ export const SAVE_SLOT_KEY = 'save.slot.default';
 
 /**
  * The progression slices persisted by default: player/world position and
- * motion, region live state, the camera view, and audio settings. All
- * mutable world state; no content, no presentation transients.
+ * motion, region live state, the camera view, audio settings, and quest
+ * progress. All mutable world state; no content, no presentation transients.
  */
 export const PROGRESSION_SLICES: readonly ComponentType<ComponentData>[] = [
   POSITION,
@@ -61,12 +62,14 @@ export const PROGRESSION_SLICES: readonly ComponentType<ComponentData>[] = [
   REGION,
   CAMERA,
   AUDIO_SETTINGS,
+  QUEST_STATE,
 ];
 
 /** Gameplay events that trigger an autosave on the following update. */
 export const AUTOSAVE_EVENTS: readonly EventType<EventPayload>[] = [
   REGION_ENTERED,
   MOVEMENT_STOPPED,
+  SYSTEM_RESTORED,
 ];
 
 /** A versioned, self-describing save of progression slices. */

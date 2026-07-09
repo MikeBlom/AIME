@@ -73,6 +73,21 @@ export {
 } from './physics';
 export type { Box, Broadphase, Collider, CollisionContacts, TriggerOccupancy } from './physics';
 export {
+  createQuestPlugin,
+  createQuestSystem,
+  initialQuestState,
+  OBJECTIVE_RESOLVED,
+  QUEST,
+  QUEST_ADVANCED,
+  QUEST_COMPLETED,
+  QUEST_REVEALED,
+  QUEST_STATE,
+  REGION_ONLINE,
+  REGION_STATE_CHANGED,
+  SYSTEM_RESTORED,
+} from './quest';
+export type { ObjectiveStatus, QuestDefinition, QuestObjective, QuestState } from './quest';
+export {
   ASSET_MANIFEST,
   CAMERA,
   RENDER_MOTION,
