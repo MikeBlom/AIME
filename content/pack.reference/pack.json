@@ -6,7 +6,7 @@
   "engineCompatibility": ">=0.1.0 <1.0.0",
   "creator": {
     "displayName": "PLACEHOLDER Creator Name",
-    "tagline": "PLACEHOLDER one-line framing shown only in-world, never as a resume"
+    "tagline": "PLACEHOLDER one-line framing spoken from inside the world's fiction"
   },
   "defaultLocale": "en",
   "entry": { "startRegion": "region.arrival" },
