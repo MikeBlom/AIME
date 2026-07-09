@@ -74,6 +74,10 @@
     "ui.settings.action.move-up": "PLACEHOLDER Move up",
     "ui.settings.action.move-down": "PLACEHOLDER Move down",
     "ui.settings.action.interact": "PLACEHOLDER Interact",
-    "ui.settings.locale": "PLACEHOLDER Language"
+    "ui.settings.locale": "PLACEHOLDER Language",
+    "onboarding.hint.welcome": "PLACEHOLDER The yard has been waiting for someone like you",
+    "onboarding.hint.move": "PLACEHOLDER The paths are open — wander where the lights flicker",
+    "onboarding.hint.interact": "PLACEHOLDER Anything humming can be woken — get close and try it",
+    "onboarding.hint.objective": "PLACEHOLDER Something nearby is still dark and waiting to run"
   }
 }

@@ -43,6 +43,7 @@ import { ANALYTICS_STATE } from './analytics';
 import { AUDIO_SETTINGS } from './audio';
 import { INPUT_BINDINGS } from './input';
 import { LOCALE_STATE } from './locale';
+import { ONBOARDING_STATE } from './onboarding';
 import { PROGRESSION } from './progression';
 import { QUEST_STATE, SYSTEM_RESTORED } from './quest';
 import { CAMERA } from './render';
@@ -94,6 +95,8 @@ export const PROGRESSION_SLICES: readonly ComponentType<ComponentData>[] = [
   // The analytics switch and captured funnel (issue #39), so a resumed
   // session never double-counts its milestones.
   ANALYTICS_STATE,
+  // Onboarding one-shots (issue #44), so a return visit replays no welcome.
+  ONBOARDING_STATE,
 ];
 
 /** Gameplay events that trigger an autosave on the following update. */

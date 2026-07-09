@@ -173,6 +173,23 @@ export {
 } from './npc';
 export type { NpcBehavior, NpcDefinition, NpcRoutineEntry } from './npc';
 export {
+  ADRIFT_SECONDS,
+  createOnboardingPlugin,
+  createOnboardingSystem,
+  CUE_SECONDS,
+  FRESH_ONBOARDING,
+  INTERACT_NUDGE_SECONDS,
+  MOVE_NUDGE_SECONDS,
+  ONBOARDING_CUE,
+  ONBOARDING_INTERACT_KEY,
+  ONBOARDING_MOVE_KEY,
+  ONBOARDING_OBJECTIVE_KEY,
+  ONBOARDING_STATE,
+  ONBOARDING_WELCOME_KEY,
+  WELCOME_DELAY_SECONDS,
+} from './onboarding';
+export type { CueId, OnboardingState } from './onboarding';
+export {
   boxesOverlap,
   BROADPHASE_CELL,
   buildBroadphase,

@@ -74,6 +74,10 @@
     "ui.settings.action.move-up": "XL PLACEHOLDER Move up xxxx",
     "ui.settings.action.move-down": "XL PLACEHOLDER Move down xxxx",
     "ui.settings.action.interact": "XL PLACEHOLDER Interact xxxx",
-    "ui.settings.locale": "XL PLACEHOLDER Language xxxx"
+    "ui.settings.locale": "XL PLACEHOLDER Language xxxx",
+    "onboarding.hint.welcome": "XL PLACEHOLDER The yard has been waiting for someone like you xxxx xxxx xxxx",
+    "onboarding.hint.move": "XL PLACEHOLDER The paths are open — wander where the lights flicker xxxx xxxx xxxx",
+    "onboarding.hint.interact": "XL PLACEHOLDER Anything humming can be woken — get close and try it xxxx xxxx xxxx",
+    "onboarding.hint.objective": "XL PLACEHOLDER Something nearby is still dark and waiting to run xxxx xxxx xxxx"
   }
 }
