@@ -39,6 +39,7 @@ import { defineEventType } from '../core';
 import type { KeyValueStorage } from '../platform';
 import { ACCESSIBILITY_SETTINGS } from './accessibility';
 import { ACHIEVEMENT_STATE } from './achievements';
+import { ANALYTICS_STATE } from './analytics';
 import { AUDIO_SETTINGS } from './audio';
 import { INPUT_BINDINGS } from './input';
 import { LOCALE_STATE } from './locale';
@@ -90,6 +91,9 @@ export const PROGRESSION_SLICES: readonly ComponentType<ComponentData>[] = [
   INPUT_BINDINGS,
   // The chosen locale (issue #38), so a return visit keeps its language.
   LOCALE_STATE,
+  // The analytics switch and captured funnel (issue #39), so a resumed
+  // session never double-counts its milestones.
+  ANALYTICS_STATE,
 ];
 
 /** Gameplay events that trigger an autosave on the following update. */

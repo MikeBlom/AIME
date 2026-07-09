@@ -18,6 +18,7 @@ import type {
   NarrationChannel,
   Platform,
   RenderSurface,
+  TelemetrySink,
   TimerSource,
 } from './types';
 
@@ -37,9 +38,26 @@ export function createBrowserPlatform(canvas: HTMLCanvasElement): BrowserPlatfor
     storage: createStorage(),
     timers: createTimerSource(),
     narration,
+    telemetry: createTelemetrySink(),
     dispose: () => {
       input.dispose();
       narration.dispose();
+    },
+  };
+}
+
+/**
+ * Local-only telemetry (docs/36's privacy stance): a bounded in-memory
+ * buffer, no network, no persistence. A future transport upgrades inside
+ * this layer only — and is an explicit product decision, never a default.
+ */
+function createTelemetrySink(): TelemetrySink {
+  const buffer: { metric: string; value: number }[] = [];
+  const CAP = 256;
+  return {
+    record: (metric, value) => {
+      if (buffer.length >= CAP) buffer.shift();
+      buffer.push({ metric, value });
     },
   };
 }

@@ -14,6 +14,7 @@ import {
   animationPoses,
   createAccessibilityPlugin,
   createAchievementsPlugin,
+  createAnalyticsPlugin,
   createAnimationPlugin,
   createAssemblyPlugin,
   createAudioPlugin,
@@ -129,6 +130,9 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
   registry.register(renderPlugin);
   registry.register(createUiPlugin());
   registry.register(createAudioPlugin());
+  // Passive funnel telemetry (issue #39): a bus subscriber translating
+  // gameplay events into anonymized metrics; never on the gameplay path.
+  registry.register(createAnalyticsPlugin());
   registry.register(createSaveLoadPlugin(saveLoadOptions));
 
   const world = new EntityStore();

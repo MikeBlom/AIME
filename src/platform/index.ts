@@ -17,6 +17,7 @@ export type {
   Platform,
   PlatformData,
   RenderSurface,
+  TelemetrySink,
   TextAlign,
   TimerSource,
 } from './types';
@@ -36,8 +37,10 @@ export type {
   HeadlessPlatform,
   HeadlessPlatformOptions,
   HeadlessRenderSurface,
+  HeadlessTelemetrySink,
   HeadlessTimerSource,
   RenderCommand,
+  TelemetryRecord,
 } from './headless';
 
 export const LAYER = 'platform';

@@ -35,6 +35,18 @@ export {
 } from './achievements';
 export type { AchievementDefinition, AchievementState, UnlockRule } from './achievements';
 export {
+  ANALYTICS_CONTROL,
+  ANALYTICS_STATE,
+  createAnalyticsPlugin,
+  createAnalyticsSystem,
+  DEFAULT_ANALYTICS_STATE,
+  FUNNEL_METRIC_PREFIX,
+  MILESTONE_FIRST_DELIGHT,
+  MILESTONE_FIRST_RESTORATION,
+  MILESTONE_SHORT_VISIT,
+} from './analytics';
+export type { AnalyticsState } from './analytics';
+export {
   ambientBedCandidates,
   AUDIO_CONTROL,
   AUDIO_SETTINGS,

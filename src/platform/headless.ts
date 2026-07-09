@@ -18,6 +18,7 @@ import type {
   Platform,
   PlatformData,
   RenderSurface,
+  TelemetrySink,
   TimerSource,
 } from './types';
 
@@ -60,6 +61,14 @@ export interface HeadlessNarrationChannel extends NarrationChannel {
   readonly announcements: readonly string[];
 }
 
+/** One recorded metric measurement. */
+export type TelemetryRecord = { readonly metric: string; readonly value: number };
+
+export interface HeadlessTelemetrySink extends TelemetrySink {
+  /** Every recorded measurement since construction, in order. */
+  readonly records: readonly TelemetryRecord[];
+}
+
 export interface HeadlessTimerSource extends TimerSource {
   /** Deliver one frame of `elapsedSeconds` to every registered callback. */
   tick(elapsedSeconds: number): void;
@@ -74,6 +83,7 @@ export type HeadlessPlatform = Platform & {
   readonly storage: KeyValueStorage;
   readonly timers: HeadlessTimerSource;
   readonly narration: HeadlessNarrationChannel;
+  readonly telemetry: HeadlessTelemetrySink;
 };
 
 export interface HeadlessPlatformOptions {
@@ -93,6 +103,19 @@ export function createHeadlessPlatform(options: HeadlessPlatformOptions = {}): H
     storage: createStorage(),
     timers: createTimerSource(),
     narration: createNarrationChannel(),
+    telemetry: createTelemetrySink(),
+  };
+}
+
+function createTelemetrySink(): HeadlessTelemetrySink {
+  const records: TelemetryRecord[] = [];
+  return {
+    record: (metric, value) => {
+      records.push({ metric, value });
+    },
+    get records() {
+      return records.slice();
+    },
   };
 }
 
