@@ -20,6 +20,7 @@ import type { EntityId, EntityStore, Plugin, System, SystemContext } from '../co
 import { defineComponentType } from '../core';
 import type { RenderSurface } from '../platform';
 import { THEME } from '../style';
+import { reducedMotionOf } from './accessibility';
 import type { Position, Renderable } from './scene';
 import {
   activeSpaceOf,
@@ -275,9 +276,13 @@ export function renderFrame(
   // The space-transition cover (issue #30): fade to full dark toward the
   // swap at the transition's midpoint, then back in — the polish that hides
   // the population change. Reads world state only; absent draws nothing.
+  // Reduced motion (docs/34): the cover holds fully dark for the whole
+  // transition — a clean cut instead of an animated fade (NFR-ART-003).
   if (activeSpace.transition !== null) {
     const progress = activeSpace.transition.progress;
-    const alpha = Math.min(1, Math.max(0, progress < 0.5 ? progress * 2 : (1 - progress) * 2));
+    const alpha = reducedMotionOf(world)
+      ? 1
+      : Math.min(1, Math.max(0, progress < 0.5 ? progress * 2 : (1 - progress) * 2));
     if (alpha > 0) {
       const surface = render.size();
       render.fillRect(0, 0, surface.width, surface.height, `rgba(${TRANSITION_RGB}, ${alpha})`);

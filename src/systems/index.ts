@@ -80,16 +80,30 @@ export {
 } from './camera';
 export type { CameraFollow } from './camera';
 export {
+  ACCESSIBILITY_CONTROL,
+  ACCESSIBILITY_SETTINGS,
+  accessibilitySettingsOf,
+  createAccessibilityPlugin,
+  createAccessibilitySystem,
+  DEFAULT_ACCESSIBILITY_SETTINGS,
+  INPUT_REMAP,
+  reducedMotionOf,
+} from './accessibility';
+export type { AccessibilitySettings } from './accessibility';
+export {
   activeBindings,
+  createInputPlugin,
+  createInputSystem,
   DEFAULT_BINDINGS,
   INPUT_BINDINGS,
+  INPUT_CAPTURE,
   INPUT_INTENT,
+  INPUT_KEY_CAPTURED,
   INTENT_INTERACT,
   INTENT_MOVE,
-  inputPlugin,
-  inputSystem,
+  INTENT_SETTINGS,
 } from './input';
-export type { BindingTable, InputBindings, InputIntent } from './input';
+export type { BindingTable, InputBindings, InputCapture, InputIntent } from './input';
 export {
   ASSEMBLY_STATE,
   createAssemblyPlugin,
@@ -287,16 +301,21 @@ export {
   IDLE_UI_STATE,
   LOCALE_STRINGS,
   PROMPT_RADIUS,
+  SETTINGS_ROWS,
   UI_DIALOGUE_CHOSEN,
   UI_DIALOGUE_CLOSE,
   UI_DIALOGUE_OPEN,
   UI_HINT,
   UI_PROMPT_INTERACT_KEY,
+  UI_SETTINGS_OFF_KEY,
+  UI_SETTINGS_ON_KEY,
+  UI_SETTINGS_REBIND_KEY,
+  UI_SETTINGS_TITLE_KEY,
   UI_STATE,
   uiFrame,
   uiLayout,
 } from './ui';
-export type { DialogueSurface, LocaleStrings, UiState } from './ui';
+export type { DialogueSurface, LocaleStrings, SettingsRow, SettingsSurface, UiState } from './ui';
 export {
   AMBIENT_CLIP_PREFIX,
   AMBIENT_EVENT,

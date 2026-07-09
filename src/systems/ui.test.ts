@@ -8,8 +8,21 @@
 import { describe, expect, it } from 'vitest';
 import type { EntityId, SystemContext } from '../core';
 import { deepFreeze, EntityStore, EventBus, RngService, TimeService } from '../core';
+import type { HeadlessPlatform } from '../platform';
 import { createHeadlessPlatform } from '../platform';
-import { INPUT_INTENT, INTENT_INTERACT } from './input';
+import {
+  ACCESSIBILITY_CONTROL,
+  ACCESSIBILITY_SETTINGS,
+  DEFAULT_ACCESSIBILITY_SETTINGS,
+  INPUT_REMAP,
+} from './accessibility';
+import {
+  INPUT_CAPTURE,
+  INPUT_INTENT,
+  INPUT_KEY_CAPTURED,
+  INTENT_INTERACT,
+  INTENT_SETTINGS,
+} from './input';
 import type { InputIntent } from './input';
 import { movementSystem } from './movement';
 import { IDLE_MOTION, MOTION, PLAYER_CONTROLLED, POSITION, RENDERABLE } from './scene';
@@ -17,11 +30,13 @@ import {
   createUiSystem,
   LOCALE_STRINGS,
   PROMPT_RADIUS,
+  SETTINGS_ROWS,
   UI_DIALOGUE_CHOSEN,
   UI_DIALOGUE_CLOSE,
   UI_DIALOGUE_OPEN,
   UI_HINT,
   UI_PROMPT_INTERACT_KEY,
+  UI_SETTINGS_TITLE_KEY,
   UI_STATE,
   uiFrame,
   uiLayout,
@@ -34,6 +49,7 @@ interface Harness {
   readonly events: EventBus;
   readonly context: SystemContext;
   readonly system: ReturnType<typeof createUiSystem>;
+  readonly platform: HeadlessPlatform;
   /** One simulated fixed step: flush deferred events, then update. */
   step(): void;
 }
@@ -41,11 +57,12 @@ interface Harness {
 function harness(): Harness {
   const world = new EntityStore();
   const events = new EventBus({ logEnabled: false });
+  const platform = createHeadlessPlatform();
   const context: SystemContext = {
     world,
     events,
     scheduler: { schedule: (task: () => void) => task() },
-    platform: createHeadlessPlatform(),
+    platform,
     time: new TimeService(DT),
     rng: new RngService(1),
     input: { current: deepFreeze({}) },
@@ -57,6 +74,7 @@ function harness(): Harness {
     events,
     context,
     system,
+    platform,
     step: () => {
       events.flushDeferred();
       system.update(DT, context);
@@ -202,7 +220,13 @@ describe('dialogue surface API (interface contract)', () => {
     addPlayer(h.world, 100, 100);
     h.events.publish(INTENT_INTERACT, {});
     h.step();
-    expect(uiState(h)).toEqual({ prompt: null, hint: null, dialogue: null, modal: false });
+    expect(uiState(h)).toEqual({
+      prompt: null,
+      hint: null,
+      dialogue: null,
+      settings: null,
+      modal: false,
+    });
   });
 
   it('shows and clears the hint line via events', () => {
@@ -289,6 +313,235 @@ describe('presentation (AC2: legible on desktop and mobile, no inline strings)',
     h.step();
     uiFrame(h.context, platform.render);
     expect(platform.render.commands).toEqual([]);
+  });
+});
+
+describe('settings surface (docs/34: keyboard-only, FR-A11Y-005)', () => {
+  function openSettings(h: Harness): void {
+    h.events.publish(INTENT_SETTINGS, {});
+    h.step();
+  }
+
+  it('toggles open (first row selected, modal) and closed on the settings intent', () => {
+    const h = harness();
+    openSettings(h);
+    expect(uiState(h)?.settings).toEqual({ selected: 0, capture: null });
+    expect(uiState(h)?.modal).toBe(true);
+
+    openSettings(h);
+    expect(uiState(h)?.settings).toBeNull();
+    expect(uiState(h)?.modal).toBe(false);
+  });
+
+  it('suppresses the proximity prompt while open', () => {
+    const h = harness();
+    addPlayer(h.world, 100, 100);
+    addMarker(h.world, 'npc', 105, 100);
+    h.step();
+    expect(uiState(h)?.prompt).toBe(UI_PROMPT_INTERACT_KEY);
+    openSettings(h);
+    expect(uiState(h)?.prompt).toBeNull();
+  });
+
+  it('vertical move edges cycle the row selection without repeating while held', () => {
+    const h = harness();
+    openSettings(h);
+    setIntent(h.world, { ...IDLE_INTENT, moveY: 1 });
+    h.step();
+    expect(uiState(h)?.settings?.selected).toBe(1);
+    h.step(); // held: no repeat
+    expect(uiState(h)?.settings?.selected).toBe(1);
+
+    setIntent(h.world, IDLE_INTENT);
+    h.step();
+    setIntent(h.world, { ...IDLE_INTENT, moveY: -1 });
+    h.step();
+    expect(uiState(h)?.settings?.selected).toBe(0); // wraps and returns
+  });
+
+  it('interact on a toggle row requests the flipped setting by event, never a write', () => {
+    const h = harness();
+    const controls: unknown[] = [];
+    h.events.subscribe(ACCESSIBILITY_CONTROL, (event) => controls.push(event.payload));
+    openSettings(h); // row 0: reduced motion (off by default)
+    h.events.publish(INTENT_INTERACT, {});
+    setIntent(h.world, { ...IDLE_INTENT, interact: true });
+    h.step();
+    h.events.flushDeferred();
+    expect(controls).toEqual([{ reducedMotion: true }]);
+    // The UI never wrote the settings slice itself (FR-ARCH-015).
+    expect(h.world.query(ACCESSIBILITY_SETTINGS)).toHaveLength(0);
+  });
+
+  it('interact on a remap row listens, then a captured key requests the rebind', () => {
+    const h = harness();
+    const remaps: unknown[] = [];
+    h.events.subscribe(INPUT_REMAP, (event) => remaps.push(event.payload));
+    openSettings(h);
+    // Navigate to the first remap row.
+    const remapIndex = SETTINGS_ROWS.findIndex((row) => row.kind === 'remap');
+    for (let i = 0; i < remapIndex; i += 1) {
+      setIntent(h.world, { ...IDLE_INTENT, moveY: 1 });
+      h.step();
+      setIntent(h.world, IDLE_INTENT);
+      h.step();
+    }
+    h.events.publish(INTENT_INTERACT, {});
+    h.step();
+    expect(uiState(h)?.settings?.capture).toBe('move-left');
+    // The capture request the Input System reads is active.
+    const captureEntity = h.world.query(INPUT_CAPTURE)[0] as EntityId;
+    expect(h.world.getComponent(captureEntity, INPUT_CAPTURE)?.active).toBe(true);
+
+    h.events.publish(INPUT_KEY_CAPTURED, { code: 'KeyJ' });
+    h.step();
+    h.events.flushDeferred();
+    expect(remaps).toEqual([{ action: 'move-left', codes: ['KeyJ'] }]);
+    expect(uiState(h)?.settings?.capture).toBeNull();
+    expect(h.world.getComponent(captureEntity, INPUT_CAPTURE)?.active).toBe(false);
+  });
+
+  it('a captured key bound to the settings action cancels instead of binding (FR-A11Y-007)', () => {
+    const h = harness();
+    const remaps: unknown[] = [];
+    h.events.subscribe(INPUT_REMAP, (event) => remaps.push(event.payload));
+    openSettings(h);
+    setIntent(h.world, { ...IDLE_INTENT, moveY: -1 });
+    h.step(); // wrap up to the last row (interact remap)
+    h.events.publish(INTENT_INTERACT, {});
+    setIntent(h.world, IDLE_INTENT);
+    h.step();
+    expect(uiState(h)?.settings?.capture).toBe('interact');
+
+    h.events.publish(INPUT_KEY_CAPTURED, { code: 'Escape' }); // default settings key
+    h.step();
+    h.events.flushDeferred();
+    expect(remaps).toEqual([]);
+    expect(uiState(h)?.settings?.capture).toBeNull();
+  });
+
+  it('ignores interact edges after a rebind until the key is released (no re-entry loop)', () => {
+    const h = harness();
+    openSettings(h);
+    const remapIndex = SETTINGS_ROWS.findIndex((row) => row.kind === 'remap');
+    for (let i = 0; i < remapIndex; i += 1) {
+      setIntent(h.world, { ...IDLE_INTENT, moveY: 1 });
+      h.step();
+      setIntent(h.world, IDLE_INTENT);
+      h.step();
+    }
+    h.events.publish(INTENT_INTERACT, {});
+    h.step();
+    h.events.publish(INPUT_KEY_CAPTURED, { code: 'KeyJ' });
+    h.step(); // rebind completes; cooldown arms
+    // The freshly bound key is still held: its interact edge is swallowed.
+    setIntent(h.world, { ...IDLE_INTENT, interact: true });
+    h.events.publish(INTENT_INTERACT, {});
+    h.step();
+    expect(uiState(h)?.settings?.capture).toBeNull();
+    // Released, then pressed again: the edge activates normally.
+    setIntent(h.world, IDLE_INTENT);
+    h.step();
+    h.events.publish(INTENT_INTERACT, {});
+    h.step();
+    expect(uiState(h)?.settings?.capture).toBe('move-left');
+  });
+
+  it('takes selection and interact edges while a dialogue waits beneath', () => {
+    const h = harness();
+    h.events.publish(UI_DIALOGUE_OPEN, { textKey: 'k.line', choiceKeys: ['k.a', 'k.b'] });
+    h.step();
+    openSettings(h);
+    setIntent(h.world, { ...IDLE_INTENT, moveY: 1 });
+    h.step();
+    expect(uiState(h)?.settings?.selected).toBe(1);
+    expect(uiState(h)?.dialogue?.selected).toBe(0); // untouched beneath
+    openSettings(h);
+    expect(uiState(h)?.dialogue?.textKey).toBe('k.line'); // still open
+  });
+
+  it('draws the settings panel from locale keys with the selection accented', () => {
+    const h = harness();
+    const platform = createHeadlessPlatform({ width: 640, height: 360 });
+    addStrings(h.world, {
+      [UI_SETTINGS_TITLE_KEY]: 'LOCALIZED settings',
+      'ui.settings.reduced-motion': 'LOCALIZED reduced motion',
+      'ui.settings.on': 'LOCALIZED on',
+      'ui.settings.off': 'LOCALIZED off',
+    });
+    openSettings(h);
+    uiFrame(h.context, platform.render);
+    const texts = platform.render.commands.filter((c) => c['op'] === 'drawText');
+    expect(texts[0]).toMatchObject({ text: 'LOCALIZED settings' });
+    // The toggle row shows its label plus the off state; unresolved row
+    // labels draw nothing — never a raw key (DATA-FR-011).
+    expect(texts.map((t) => t['text'])).toContain('LOCALIZED reduced motion  LOCALIZED off');
+    expect(texts).toHaveLength(2);
+  });
+});
+
+describe('narration of essential content (docs/34 FR-A11Y-003)', () => {
+  it('announces the prompt appearing, hint changes, and dialogue lines in order', () => {
+    const h = harness();
+    addStrings(h.world, {
+      [UI_PROMPT_INTERACT_KEY]: 'SPOKEN prompt',
+      'k.hint': 'SPOKEN hint',
+      'k.line': 'SPOKEN line',
+      'k.a': 'SPOKEN choice a',
+    });
+    addPlayer(h.world, 100, 100);
+    addMarker(h.world, 'npc', 105, 100);
+    h.step(); // prompt appears
+    h.events.publish(UI_HINT, { textKey: 'k.hint' });
+    h.step();
+    h.events.publish(UI_DIALOGUE_OPEN, { textKey: 'k.line', choiceKeys: ['k.a'] });
+    h.step();
+    expect(h.platform.narration.announcements).toEqual([
+      'SPOKEN prompt',
+      'SPOKEN hint',
+      'SPOKEN line',
+      'SPOKEN choice a',
+    ]);
+  });
+
+  it('announces nothing while narration is disabled or a key is unresolved', () => {
+    const h = harness();
+    // Disable narration through the settings slice.
+    const entity = h.world.createEntity();
+    h.world.addComponent(entity, ACCESSIBILITY_SETTINGS, {
+      ...DEFAULT_ACCESSIBILITY_SETTINGS,
+      narration: false,
+    });
+    addStrings(h.world, { 'k.line': 'SPOKEN line' });
+    h.events.publish(UI_DIALOGUE_OPEN, { textKey: 'k.line' });
+    h.step();
+    expect(h.platform.narration.announcements).toEqual([]);
+
+    // Re-enable: an unresolved key still announces nothing (never raw keys).
+    h.world.addComponent(entity, ACCESSIBILITY_SETTINGS, DEFAULT_ACCESSIBILITY_SETTINGS);
+    h.events.publish(UI_HINT, { textKey: 'k.unknown' });
+    h.step();
+    expect(h.platform.narration.announcements).toEqual([]);
+  });
+
+  it('announces the settings title on open and rows as the selection moves', () => {
+    const h = harness();
+    addStrings(h.world, {
+      [UI_SETTINGS_TITLE_KEY]: 'SPOKEN settings',
+      'ui.settings.reduced-motion': 'SPOKEN reduced motion',
+      'ui.settings.narration': 'SPOKEN narration',
+      'ui.settings.on': 'SPOKEN on',
+      'ui.settings.off': 'SPOKEN off',
+    });
+    h.events.publish(INTENT_SETTINGS, {});
+    h.step();
+    setIntent(h.world, { ...IDLE_INTENT, moveY: 1 });
+    h.step();
+    expect(h.platform.narration.announcements).toEqual([
+      'SPOKEN settings',
+      'SPOKEN reduced motion: SPOKEN off',
+      'SPOKEN narration: SPOKEN on',
+    ]);
   });
 });
 

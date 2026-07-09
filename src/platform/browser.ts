@@ -15,6 +15,7 @@ import type {
   InputDevice,
   InputSnapshot,
   KeyValueStorage,
+  NarrationChannel,
   Platform,
   RenderSurface,
   TimerSource,
@@ -28,13 +29,46 @@ export type BrowserPlatform = Platform & {
 /** Build a browser adapter around a canvas the host page provides. */
 export function createBrowserPlatform(canvas: HTMLCanvasElement): BrowserPlatform {
   const input = createInputDevice(canvas);
+  const narration = createNarrationChannel();
   return {
     render: createRenderSurface(canvas),
     input,
     audio: createAudioOutput(),
     storage: createStorage(),
     timers: createTimerSource(),
-    dispose: () => input.dispose(),
+    narration,
+    dispose: () => {
+      input.dispose();
+      narration.dispose();
+    },
+  };
+}
+
+function createNarrationChannel(): NarrationChannel & { dispose(): void } {
+  // An ARIA live region: visually hidden (clipped to a pixel, never
+  // display:none, which silences assistive tech), polite so narration
+  // never interrupts itself mid-sentence. The canvas world is otherwise
+  // invisible to a screen reader; this is its voice (NFR-VIS-003).
+  const region = document.createElement('div');
+  region.setAttribute('role', 'status');
+  region.setAttribute('aria-live', 'polite');
+  region.setAttribute('aria-atomic', 'true');
+  region.style.position = 'absolute';
+  region.style.width = '1px';
+  region.style.height = '1px';
+  region.style.overflow = 'hidden';
+  region.style.clipPath = 'inset(50%)';
+  region.style.whiteSpace = 'nowrap';
+  document.body.append(region);
+  return {
+    announce: (text) => {
+      // Clear first so repeating the same line still registers as a change.
+      region.textContent = '';
+      region.textContent = text;
+    },
+    dispose: () => {
+      region.remove();
+    },
   };
 }
 

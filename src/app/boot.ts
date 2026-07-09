@@ -12,6 +12,7 @@ import { loadPack } from '../content';
 import type { Platform } from '../platform';
 import {
   animationPoses,
+  createAccessibilityPlugin,
   createAchievementsPlugin,
   createAnimationPlugin,
   createAssemblyPlugin,
@@ -27,9 +28,9 @@ import {
   createQuestPlugin,
   createRouteAndBalancePlugin,
   createSaveLoadPlugin,
+  createInputPlugin,
   createUiPlugin,
   createWorldSimPlugin,
-  inputPlugin,
   loadWorld,
   uiFrame,
   movementPlugin,
@@ -89,7 +90,10 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
 
   const registry = new ModuleRegistry();
   registry.register(scenePlugin);
-  registry.register(inputPlugin);
+  // Before input (issue #37): a rebind applied this step is read by the
+  // Input System the same step, so remaps land without a frame of lag.
+  registry.register(createAccessibilityPlugin());
+  registry.register(createInputPlugin());
   registry.register(movementPlugin);
   // Registered between Movement and Physics so the stable tiebreak keeps
   // character motion inside the same step's constraint sweep.

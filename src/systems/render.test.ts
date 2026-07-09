@@ -11,7 +11,8 @@ import {
   renderSystem,
   viewTransform,
 } from './render';
-import { LOGICAL_SPACE, POSITION, REGION, RENDERABLE } from './scene';
+import { ACCESSIBILITY_SETTINGS, DEFAULT_ACCESSIBILITY_SETTINGS } from './accessibility';
+import { ACTIVE_SPACE, LOGICAL_SPACE, POSITION, REGION, RENDERABLE, SPACE_EXTERIOR } from './scene';
 
 const DT = 1 / 60;
 
@@ -213,5 +214,42 @@ describe('renderFrame', () => {
     expect(() => renderFrame(0.25, context, render)).not.toThrow();
     expect(context.world.getComponent(entity, RENDER_MOTION)).toBeDefined();
     expect(drawnRects(render)).toHaveLength(1);
+  });
+});
+
+describe('reduced motion (docs/34 FR-A11Y-002)', () => {
+  function setTransition(context: SystemContext, progress: number): void {
+    const entity = context.world.createEntity();
+    context.world.addComponent(entity, ACTIVE_SPACE, {
+      space: SPACE_EXTERIOR,
+      transition: { to: 'space.interior', progress },
+      returnX: null,
+      returnY: null,
+      armed: false,
+    });
+  }
+
+  function coverAlpha(context: SystemContext): number | null {
+    const render = makeSurface();
+    renderFrame(0, context, render);
+    const cover = render.commands
+      .filter((c) => c['op'] === 'fillRect')
+      .find((c) => typeof c['color'] === 'string' && (c['color'] as string).includes('rgba'));
+    if (cover === undefined) return null;
+    const match = /rgba\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\)/.exec(cover['color'] as string);
+    return match === null ? null : Number(match[1]);
+  }
+
+  it('holds the space-transition cover fully dark instead of fading', () => {
+    const context = makeContext();
+    setTransition(context, 0.1); // early in the fade: normally translucent
+    expect(coverAlpha(context)).toBeCloseTo(0.2);
+
+    const settings = context.world.createEntity();
+    context.world.addComponent(settings, ACCESSIBILITY_SETTINGS, {
+      ...DEFAULT_ACCESSIBILITY_SETTINGS,
+      reducedMotion: true,
+    });
+    expect(coverAlpha(context)).toBe(1);
   });
 });

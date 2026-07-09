@@ -19,6 +19,7 @@
 import type { EntityId, EntityStore, Plugin, System, SystemContext } from '../core';
 import { defineComponentType, defineEventType } from '../core';
 import { THEME } from '../style';
+import { reducedMotionOf } from './accessibility';
 import type { Camera } from './render';
 import { CAMERA } from './render';
 import { LOGICAL_SPACE, PLAYER_CONTROLLED, POSITION } from './scene';
@@ -143,7 +144,9 @@ export function createCameraSystem(): System {
       }
       if (!follow.enabled) return;
 
-      const blend = Math.min(1, follow.damping * dt);
+      // Reduced motion (docs/34): the view lands instantly instead of
+      // easing — same targets, no travel (NFR-ART-003).
+      const blend = reducedMotionOf(world) ? 1 : Math.min(1, follow.damping * dt);
       const target = followTarget(world) ?? {
         x: LOGICAL_SPACE.width / 2,
         y: LOGICAL_SPACE.height / 2,

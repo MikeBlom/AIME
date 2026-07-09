@@ -16,6 +16,7 @@ import {
 } from '../core';
 import { createHeadlessPlatform } from '../platform';
 import { bootWorld } from '../app';
+import { ACCESSIBILITY_SETTINGS, DEFAULT_ACCESSIBILITY_SETTINGS } from './accessibility';
 import {
   CAMERA_FOLLOW,
   CAMERA_ZOOM_REQUESTED,
@@ -274,5 +275,23 @@ describe('end to end on a booted world', () => {
       expect(Math.abs(Math.min(240, player.x) - camera.x)).toBeLessThanOrEqual(1);
     }
     stop();
+  });
+});
+
+describe('reduced motion (docs/34 FR-A11Y-002)', () => {
+  it('lands on the follow target instantly instead of easing', () => {
+    const h = harness();
+    const world = h.context.world;
+    addPlayer(world, 200, 90);
+    h.setView(CENTER.x, CENTER.y, 2);
+    const settings = world.createEntity();
+    world.addComponent(settings, ACCESSIBILITY_SETTINGS, {
+      ...DEFAULT_ACCESSIBILITY_SETTINGS,
+      reducedMotion: true,
+    });
+
+    h.step();
+    expect(h.camera().x).toBe(200);
+    expect(h.camera().y).toBe(90);
   });
 });

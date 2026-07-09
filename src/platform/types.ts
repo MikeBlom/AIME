@@ -115,6 +115,17 @@ export interface AudioOutput {
   setMasterVolume(level: number): void;
 }
 
+/**
+ * Screen-reader narration: announce one line of already-localized essential
+ * content (a prompt, a hint, a dialogue line) through the host's assistive
+ * channel — an ARIA live region in a browser, a recorded call in tests. The
+ * text arrives resolved from the content pack's locale strings, never a
+ * career fact from engine code. Hosts without assistive output may no-op.
+ */
+export interface NarrationChannel {
+  announce(text: string): void;
+}
+
 /** Narrow persistent key-value storage for save/load and settings. */
 export interface KeyValueStorage {
   read(key: string): string | null;
@@ -146,4 +157,5 @@ export type Platform = {
   readonly audio: AudioOutput;
   readonly storage: KeyValueStorage;
   readonly timers: TimerSource;
+  readonly narration: NarrationChannel;
 };

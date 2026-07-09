@@ -24,6 +24,7 @@ import {
   facingDirection,
   resolveClipFrame,
 } from './animation';
+import { ACCESSIBILITY_SETTINGS, DEFAULT_ACCESSIBILITY_SETTINGS } from './accessibility';
 import { INTENT_INTERACT } from './input';
 import { ASSET_MANIFEST, renderFrame } from './render';
 import type { Motion } from './scene';
@@ -333,5 +334,37 @@ describe('pose output feeds rendering (interface contract)', () => {
     renderFrame(0, h.context, platform.render);
     const fallback = platform.render.commands.filter((c) => c['op'] === 'drawSprite');
     expect(fallback[0]).toMatchObject({ assetRef: 'assets/hero.png' });
+  });
+});
+
+describe('reduced motion (docs/34 FR-A11Y-002)', () => {
+  function enableReducedMotion(world: EntityStore): void {
+    const entity = world.createEntity();
+    world.addComponent(entity, ACCESSIBILITY_SETTINGS, {
+      ...DEFAULT_ACCESSIBILITY_SETTINGS,
+      reducedMotion: true,
+    });
+  }
+
+  it('freezes clip time so sprites rest on their first frame', () => {
+    const h = harness();
+    enableReducedMotion(h.world);
+    const entity = addAnimated(h.world, 'sprite.player', { motion: MOVING_EAST });
+    h.step();
+    h.step();
+    h.step();
+    const state = h.world.getComponent(entity, ANIMATION);
+    expect(state?.clip).toBe(CLIP_WALK); // state transitions still land
+    expect(state?.elapsed).toBe(0); // but time never advances
+    expect(state?.prevElapsed).toBe(0);
+  });
+
+  it('does not play one-shots', () => {
+    const h = harness();
+    enableReducedMotion(h.world);
+    const entity = addAnimated(h.world, 'sprite.player', { player: true });
+    h.events.publish(INTENT_INTERACT, {});
+    h.step();
+    expect(h.world.getComponent(entity, ANIMATION)?.oneShot).toBeNull();
   });
 });

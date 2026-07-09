@@ -21,6 +21,17 @@
     "metaphor.steady-guidance.framing": "PLACEHOLDER fiction framing: a light kept turning on its beat through every season",
     "achievement.beacon-lit.title": "PLACEHOLDER Beacon Lit",
     "achievement.beacon-lit.description": "PLACEHOLDER awarded for the harbor's first light",
-    "ui.prompt.interact": "PLACEHOLDER Press E or tap to interact"
+    "ui.prompt.interact": "PLACEHOLDER Press E or tap to interact",
+    "ui.settings.title": "PLACEHOLDER Settings",
+    "ui.settings.reduced-motion": "PLACEHOLDER Reduced motion",
+    "ui.settings.narration": "PLACEHOLDER Screen-reader narration",
+    "ui.settings.on": "PLACEHOLDER On",
+    "ui.settings.off": "PLACEHOLDER Off",
+    "ui.settings.rebind": "PLACEHOLDER Press a key...",
+    "ui.settings.action.move-left": "PLACEHOLDER Move left",
+    "ui.settings.action.move-right": "PLACEHOLDER Move right",
+    "ui.settings.action.move-up": "PLACEHOLDER Move up",
+    "ui.settings.action.move-down": "PLACEHOLDER Move down",
+    "ui.settings.action.interact": "PLACEHOLDER Interact"
   }
 }

@@ -23,6 +23,7 @@
 import type { EntityId, EntityStore, EventPayload, Plugin, System, SystemContext } from '../core';
 import { defineComponentType, defineEventType } from '../core';
 import { THEME } from '../style';
+import { reducedMotionOf } from './accessibility';
 import { INTENT_INTERACT } from './input';
 import type { Motion } from './scene';
 import { MOTION, PLAYER_CONTROLLED, RENDERABLE } from './scene';
@@ -195,6 +196,12 @@ export function createAnimationSystem(): System {
       const world = context.world;
       const manifest = manifestOf(world);
 
+      // Reduced motion (docs/34): sprites rest on their clips' first frame
+      // and one-shots do not play — state transitions still land (the clip
+      // still switches with the world), but nothing cycles for attention.
+      const reducedMotion = reducedMotionOf(world);
+      if (reducedMotion) pendingOneShots = [];
+
       // Resolve buffered triggers to target entities: an explicit entityId
       // targets that entity; an intent-shaped trigger (no entity) targets
       // every player-controlled entity.
@@ -221,14 +228,17 @@ export function createAnimationSystem(): System {
         // Base state from world state, never from another System's call:
         // clip time restarts on transition and advances by dt otherwise.
         const clip = motion?.moving === true ? CLIP_WALK : CLIP_IDLE;
-        const prevElapsed = prior === undefined || prior.clip !== clip ? 0 : prior.elapsed;
-        const elapsed = prior === undefined || prior.clip !== clip ? 0 : prior.elapsed + dt;
+        const restart = prior === undefined || prior.clip !== clip;
+        const prevElapsed = restart || reducedMotion ? 0 : prior.elapsed;
+        const elapsed = restart || reducedMotion ? 0 : prior.elapsed + dt;
 
         // One-shots: a trigger (re)starts the clip; an active one advances
         // and expires back to the base state once its duration passes.
         let oneShot: OneShotState | null = null;
         const trigger = triggered.get(entity);
-        if (trigger !== undefined) {
+        if (reducedMotion) {
+          oneShot = null;
+        } else if (trigger !== undefined) {
           oneShot = {
             clip: trigger,
             prevElapsed: 0,
