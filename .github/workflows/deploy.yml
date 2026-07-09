@@ -1,0 +1,71 @@
+# Deployment pipeline (#41; docs/42-Deployment-and-Hosting.md). A green
+# merge to `main` publishes the built site to the `gh-pages` branch root
+# (served by GitHub Pages); every same-repo pull request publishes a
+# preview under `previews/pr-<number>/` on the same branch. The artifact is
+# relocatable (relative base, see vite.config.ts), so root and preview
+# deploys are the same build.
+#
+# `ci.yml` remains the merge gate; this workflow only ships what is already
+# green. Pushes to gh-pages are serialized by the concurrency group so a
+# preview and a main deploy never race the branch.
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: gh-pages-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    # Fork PRs get no preview: their token cannot (and should not) write
+    # this repository's gh-pages branch.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+      - name: Publish dist to gh-pages
+        env:
+          TARGET: ${{ github.event_name == 'push' && 'root' || format('previews/pr-{0}', github.event.pull_request.number) }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git fetch origin gh-pages; then
+            git worktree add site FETCH_HEAD
+            git -C site switch -C gh-pages
+          else
+            git worktree add --orphan -b gh-pages site
+          fi
+          if [ "$TARGET" = "root" ]; then
+            # Replace the site root but keep the previews tree alive.
+            (cd site && find . -mindepth 1 -maxdepth 1 -not -name '.git' -not -name 'previews' -exec rm -rf {} +)
+            cp -r dist/. site/
+          else
+            rm -rf "site/$TARGET"
+            mkdir -p "site/$TARGET"
+            cp -r dist/. "site/$TARGET/"
+          fi
+          # Pages must serve files verbatim; never run the site through Jekyll.
+          touch site/.nojekyll
+          cd site
+          git add -A
+          if git diff --cached --quiet; then
+            echo "nothing changed; skipping publish"
+            exit 0
+          fi
+          git commit -m "deploy $TARGET from ${GITHUB_SHA}"
+          git push origin gh-pages
