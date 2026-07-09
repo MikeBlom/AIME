@@ -126,6 +126,17 @@ export interface NarrationChannel {
   announce(text: string): void;
 }
 
+/**
+ * Anonymized-metric sink for the Analytics System (docs/36): named numeric
+ * measurements only — never event payloads, entity data, or free text, so
+ * personal data cannot transit this interface by construction. Where the
+ * numbers go is the backend's business: the browser holds a bounded local
+ * buffer (no network in v1), the headless backend records for assertions.
+ */
+export interface TelemetrySink {
+  record(metric: string, value: number): void;
+}
+
 /** Narrow persistent key-value storage for save/load and settings. */
 export interface KeyValueStorage {
   read(key: string): string | null;
@@ -158,4 +169,5 @@ export type Platform = {
   readonly storage: KeyValueStorage;
   readonly timers: TimerSource;
   readonly narration: NarrationChannel;
+  readonly telemetry: TelemetrySink;
 };
