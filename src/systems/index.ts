@@ -88,6 +88,23 @@ export {
 } from './quest';
 export type { ObjectiveStatus, QuestDefinition, QuestObjective, QuestState } from './quest';
 export {
+  createDialoguePlugin,
+  createDialogueSystem,
+  DIALOGUE,
+  DIALOGUE_ENDED,
+  DIALOGUE_START_REQUESTED,
+  DIALOGUE_STARTED,
+  DIALOGUE_STATE,
+  IDLE_DIALOGUE_STATE,
+} from './dialogue';
+export type {
+  DialogueChoice,
+  DialogueDefinition,
+  DialogueNode,
+  DialogueResolves,
+  DialogueState,
+} from './dialogue';
+export {
   ASSET_MANIFEST,
   CAMERA,
   RENDER_MOTION,

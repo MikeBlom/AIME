@@ -11,6 +11,7 @@ import {
   ASSET_MANIFEST,
   CAMERA,
   COLLIDER,
+  DIALOGUE,
   IDLE_MOTION,
   LOCALE_STRINGS,
   LOGICAL_SPACE,
@@ -168,6 +169,44 @@ export function spawnWorld(world: EntityStore, graph: ResolvedContentGraph): Spa
     const quest = world.createEntity();
     world.addComponent(quest, QUEST, definition);
     world.addComponent(quest, QUEST_STATE, initialQuestState(definition));
+  }
+
+  // Dialogue entities for every dialogue document (issue #26): NPCs across
+  // regions reference them, so all spawn; ids stay stable after the quests.
+  const readResolves = (value: ComponentData | undefined) => {
+    const record = asRecord(value);
+    if (typeof record['questRef'] !== 'string' || typeof record['objectiveId'] !== 'string') {
+      return null;
+    }
+    return {
+      questId: record['questRef'],
+      objectiveId: record['objectiveId'],
+      outcome: record['outcome'] === 'bypassed' ? ('bypassed' as const) : ('solved' as const),
+    };
+  };
+  for (const [id, entity] of graph.byType.get('dialogue') ?? []) {
+    const doc = entity.doc;
+    const nodes = (Array.isArray(doc['nodes']) ? doc['nodes'] : [])
+      .map((node) => asRecord(node))
+      .filter((node) => typeof node['id'] === 'string' && typeof node['textKey'] === 'string')
+      .map((node) => ({
+        id: node['id'] as string,
+        textKey: node['textKey'] as string,
+        end: node['end'] === true,
+        resolves: readResolves(node['resolves']),
+        choices: (Array.isArray(node['choices']) ? node['choices'] : [])
+          .map((choice) => asRecord(choice))
+          .filter(
+            (choice) => typeof choice['textKey'] === 'string' && typeof choice['goto'] === 'string',
+          )
+          .map((choice) => ({
+            textKey: choice['textKey'] as string,
+            goto: choice['goto'] as string,
+            resolves: readResolves(choice['resolves']),
+          })),
+      }));
+    const dialogue = world.createEntity();
+    world.addComponent(dialogue, DIALOGUE, { dialogueId: id, nodes });
   }
 
   return { regionId: regionEntity.id, player };
