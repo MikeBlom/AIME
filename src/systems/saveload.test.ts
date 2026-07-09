@@ -103,7 +103,15 @@ describe('round trip on a booted world (AC1: identical, playable state)', () => 
     const resumed = bootSession({ save: saved as string, resume: true });
     const stop = resumed.handle.start(); // resume applies at start
     stop();
-    expect(progressionOf(resumed)).toEqual(liveState);
+    // Ambient characters keep walking after the autosave snapshot (issue
+    // #27), so the live world legitimately drifts past the save; the
+    // round-trip contract is that the restored world re-captures to
+    // exactly the envelope that was saved.
+    const resumedPack = {
+      id: resumed.handle.graph.packId,
+      version: resumed.handle.graph.packVersion,
+    };
+    expect(captureSave(resumed.handle.world, resumedPack)).toEqual(parseSave(saved as string));
 
     // ...and the restored world stays playable: input still moves the player.
     const restart = resumed.handle.start();

@@ -57,6 +57,18 @@ export {
 export type { BindingTable, InputBindings, InputIntent } from './input';
 export { movementPlugin, movementSystem } from './movement';
 export {
+  activeRoutineEntry,
+  createNpcPlugin,
+  createNpcSystem,
+  DEFAULT_NPC_SPEED,
+  IDLE_NPC_BEHAVIOR,
+  NPC,
+  NPC_BEHAVIOR,
+  NPC_INTERACT_RADIUS,
+  NPC_INTERACTED,
+} from './npc';
+export type { NpcBehavior, NpcDefinition, NpcRoutineEntry } from './npc';
+export {
   boxesOverlap,
   BROADPHASE_CELL,
   buildBroadphase,
