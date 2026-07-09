@@ -14,6 +14,7 @@ import type {
   InputDevice,
   InputSnapshot,
   KeyValueStorage,
+  NarrationChannel,
   Platform,
   PlatformData,
   RenderSurface,
@@ -54,6 +55,11 @@ export interface HeadlessAudioOutput extends AudioOutput {
   readonly masterVolume: number;
 }
 
+export interface HeadlessNarrationChannel extends NarrationChannel {
+  /** Every announced line since construction, in order. */
+  readonly announcements: readonly string[];
+}
+
 export interface HeadlessTimerSource extends TimerSource {
   /** Deliver one frame of `elapsedSeconds` to every registered callback. */
   tick(elapsedSeconds: number): void;
@@ -67,6 +73,7 @@ export type HeadlessPlatform = Platform & {
   readonly audio: HeadlessAudioOutput;
   readonly storage: KeyValueStorage;
   readonly timers: HeadlessTimerSource;
+  readonly narration: HeadlessNarrationChannel;
 };
 
 export interface HeadlessPlatformOptions {
@@ -85,6 +92,19 @@ export function createHeadlessPlatform(options: HeadlessPlatformOptions = {}): H
     audio: createAudioOutput(),
     storage: createStorage(),
     timers: createTimerSource(),
+    narration: createNarrationChannel(),
+  };
+}
+
+function createNarrationChannel(): HeadlessNarrationChannel {
+  const announcements: string[] = [];
+  return {
+    announce: (text) => {
+      announcements.push(text);
+    },
+    get announcements() {
+      return announcements.slice();
+    },
   };
 }
 

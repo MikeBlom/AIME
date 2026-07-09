@@ -13,12 +13,15 @@ import { readControls } from './scene';
 import type { InputIntent } from './input';
 import {
   activeBindings,
+  createInputSystem,
   DEFAULT_BINDINGS,
   INPUT_BINDINGS,
+  INPUT_CAPTURE,
   INPUT_INTENT,
+  INPUT_KEY_CAPTURED,
   INTENT_INTERACT,
   INTENT_MOVE,
-  inputSystem,
+  INTENT_SETTINGS,
 } from './input';
 
 const DT = 1 / 60;
@@ -52,9 +55,10 @@ function intentOf(context: SystemContext): InputIntent | undefined {
   return entity === undefined ? undefined : context.world.getComponent(entity, INPUT_INTENT);
 }
 
-describe('inputSystem', () => {
+describe('input system', () => {
   it('owns an idle intent slice from init', () => {
     const context = makeContext();
+    const inputSystem = createInputSystem();
     inputSystem.init(context);
     expect(intentOf(context)).toEqual({
       moveX: 0,
@@ -76,6 +80,7 @@ describe('inputSystem', () => {
     ];
     for (const { keys, moveX, moveY } of cases) {
       const context = makeContext();
+      const inputSystem = createInputSystem();
       inputSystem.init(context);
       context.setInput(controls(keys));
       inputSystem.update(DT, context);
@@ -85,6 +90,7 @@ describe('inputSystem', () => {
 
   it('remaps bindings through world-state data, replacing the defaults', () => {
     const context = makeContext();
+    const inputSystem = createInputSystem();
     inputSystem.init(context);
     const bindings = context.world.createEntity();
     context.world.addComponent(bindings, INPUT_BINDINGS, {
@@ -105,6 +111,7 @@ describe('inputSystem', () => {
 
   it('turns a held primary pointer/touch into a move-toward target', () => {
     const context = makeContext();
+    const inputSystem = createInputSystem();
     inputSystem.init(context);
     context.setInput(controls([], { x: 250, y: 90, buttons: [0] }));
     inputSystem.update(DT, context);
@@ -119,6 +126,7 @@ describe('inputSystem', () => {
 
   it('lets an active keyboard axis win over a held pointer (FR-INP-004)', () => {
     const context = makeContext();
+    const inputSystem = createInputSystem();
     inputSystem.init(context);
     context.setInput(controls(['ArrowLeft'], { x: 250, y: 90, buttons: [0] }));
     inputSystem.update(DT, context);
@@ -127,6 +135,7 @@ describe('inputSystem', () => {
 
   it('publishes intent.move deferred only when the resolved intent changes', () => {
     const context = makeContext();
+    const inputSystem = createInputSystem();
     inputSystem.init(context);
     const moves: { x: number; y: number }[] = [];
     context.events.subscribe(INTENT_MOVE, (event) =>
@@ -154,6 +163,7 @@ describe('inputSystem', () => {
 
   it('publishes intent.interact once per press, not while held', () => {
     const context = makeContext();
+    const inputSystem = createInputSystem();
     inputSystem.init(context);
     let interactions = 0;
     context.events.subscribe(INTENT_INTERACT, () => {
@@ -173,12 +183,95 @@ describe('inputSystem', () => {
 
   it('tolerates malformed input payloads as idle intent (FR-ARCH-008)', () => {
     const context = makeContext();
+    const inputSystem = createInputSystem();
     inputSystem.init(context);
     for (const payload of [null, 7, { keys: 'x', pointer: [] }] as ComponentData[]) {
       context.setInput(payload);
       expect(() => inputSystem.update(DT, context)).not.toThrow();
       expect(intentOf(context)).toMatchObject({ moveX: 0, moveY: 0, toX: null });
     }
+  });
+});
+
+describe('settings intent and key capture (docs/34)', () => {
+  it('publishes intent.settings once per press of the settings action', () => {
+    const context = makeContext();
+    const inputSystem = createInputSystem();
+    inputSystem.init(context);
+    let presses = 0;
+    context.events.subscribe(INTENT_SETTINGS, () => {
+      presses += 1;
+    });
+
+    context.setInput(controls(['Escape']));
+    inputSystem.update(DT, context);
+    inputSystem.update(DT, context); // held: still one press
+    context.setInput(controls([]));
+    inputSystem.update(DT, context);
+    context.setInput(controls(['Escape']));
+    inputSystem.update(DT, context);
+    context.events.flushDeferred();
+    expect(presses).toBe(2);
+  });
+
+  it('while capture is active, announces only a fresh key edge and resolves idle intent', () => {
+    const context = makeContext();
+    const inputSystem = createInputSystem();
+    inputSystem.init(context);
+    const captured: string[] = [];
+    context.events.subscribe(INPUT_KEY_CAPTURED, (event) => captured.push(event.payload.code));
+
+    // A key already held when capture starts is never a fresh edge.
+    context.setInput(controls(['Space']));
+    inputSystem.update(DT, context);
+    const request = context.world.createEntity();
+    context.world.addComponent(request, INPUT_CAPTURE, { active: true });
+    inputSystem.update(DT, context);
+    context.events.flushDeferred();
+    expect(captured).toEqual([]);
+
+    // A fresh press is announced, and does not steer the world.
+    context.setInput(controls(['ArrowRight', 'Space']));
+    inputSystem.update(DT, context);
+    context.events.flushDeferred();
+    expect(captured).toEqual(['ArrowRight']);
+    expect(intentOf(context)).toMatchObject({ moveX: 0, moveY: 0, interact: false });
+
+    // Capture released: the same held key resolves intents again.
+    context.world.addComponent(request, INPUT_CAPTURE, { active: false });
+    inputSystem.update(DT, context);
+    expect(intentOf(context)).toMatchObject({ moveX: 1 });
+  });
+
+  it('suppresses settings and interact intents while capturing', () => {
+    const context = makeContext();
+    const inputSystem = createInputSystem();
+    inputSystem.init(context);
+    let presses = 0;
+    let interactions = 0;
+    context.events.subscribe(INTENT_SETTINGS, () => {
+      presses += 1;
+    });
+    context.events.subscribe(INTENT_INTERACT, () => {
+      interactions += 1;
+    });
+    const request = context.world.createEntity();
+    context.world.addComponent(request, INPUT_CAPTURE, { active: true });
+
+    context.setInput(controls(['Escape']));
+    inputSystem.update(DT, context);
+    context.setInput(controls(['Escape', 'KeyE']));
+    inputSystem.update(DT, context);
+    context.events.flushDeferred();
+    expect(presses).toBe(0);
+    expect(interactions).toBe(0);
+
+    // The Escape held through capture does not fire on release of capture
+    // either — it was never a fresh press in normal mode.
+    context.world.addComponent(request, INPUT_CAPTURE, { active: false });
+    inputSystem.update(DT, context);
+    context.events.flushDeferred();
+    expect(presses).toBe(0);
   });
 });
 
@@ -195,7 +288,7 @@ describe('per-frame snapshot boundary (FR-ARCH-023)', () => {
       },
       teardown() {},
     });
-    registry.register(inputSystem);
+    registry.register(createInputSystem());
     registry.register(probe('probe-a', ['input']));
     registry.register(probe('probe-b', ['probe-a']));
 
