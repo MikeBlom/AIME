@@ -25,7 +25,7 @@
  */
 import type { EntityId, EntityStore, Plugin, System, SystemContext } from '../core';
 import { defineComponentType, defineEventType } from '../core';
-import { MOTION, POSITION } from './scene';
+import { MOTION, POSITION, spaceOf } from './scene';
 
 /**
  * An axis-aligned collision box centered on the entity's POSITION, in
@@ -154,6 +154,7 @@ export function buildBroadphase(entries: readonly (readonly [EntityId, Box])[]):
 interface SolidView {
   readonly id: EntityId;
   readonly box: Box;
+  readonly space: string;
 }
 
 /**
@@ -216,6 +217,7 @@ function sameMembers(a: readonly number[], b: readonly number[]): boolean {
 interface MoverView {
   readonly id: EntityId;
   readonly box: Box;
+  readonly space: string;
 }
 
 /** Read every collider into solid/trigger views, in store order. */
@@ -226,7 +228,11 @@ function gatherColliders(world: EntityStore): { solids: SolidView[]; triggers: S
     const position = world.getComponent(entity, POSITION);
     const collider = world.getComponent(entity, COLLIDER);
     if (position === undefined || collider === undefined) continue;
-    const view = { id: entity, box: colliderBox(position, collider) };
+    const view = {
+      id: entity,
+      box: colliderBox(position, collider),
+      space: spaceOf(world, entity),
+    };
     if (collider.mode === 'solid') solids.push(view);
     else triggers.push(view);
   }
@@ -252,6 +258,7 @@ export const physicsSystem: System = {
       const motion = world.getComponent(entity, MOTION);
       if (collider === undefined || position === undefined || motion === undefined) continue;
       if (collider.mode !== 'solid') continue;
+      const moverSpace = spaceOf(world, entity);
       const halfW = collider.width / 2;
       const halfH = collider.height / 2;
       let velocityX = motion.velocityX;
@@ -270,10 +277,13 @@ export const physicsSystem: System = {
         maxX: Math.max(fromX, position.x) + halfW,
         maxY: Math.max(fromY, position.y) + halfH,
       };
+      // Only same-space solids constrain: an interior wall never blocks an
+      // exterior walker sharing its coordinates, and vice versa.
       const candidates = grid
         .query(area)
         .filter((id) => id !== entity)
-        .map((id) => solidById.get(id) as SolidView);
+        .map((id) => solidById.get(id) as SolidView)
+        .filter((candidate) => candidate.space === moverSpace);
 
       // Narrowphase: axis-separated sweeps (x then y — the documented stable
       // order), so sliding along a wall preserves the tangential component.
@@ -355,6 +365,7 @@ export const physicsSystem: System = {
       const resolved: MoverView = {
         id: entity,
         box: { minX: x - halfW, minY: y - halfH, maxX: x + halfW, maxY: y + halfH },
+        space: moverSpace,
       };
       movers.push(resolved);
       // Later movers must collide with where this one actually ended up,
@@ -366,7 +377,12 @@ export const physicsSystem: System = {
     // the difference — exactly once per actual transition (FR-PHY-006).
     for (const trigger of triggers) {
       const occupants = movers
-        .filter((mover) => mover.id !== trigger.id && boxesOverlap(mover.box, trigger.box))
+        .filter(
+          (mover) =>
+            mover.id !== trigger.id &&
+            mover.space === trigger.space &&
+            boxesOverlap(mover.box, trigger.box),
+        )
         .map((mover) => mover.id as number)
         .sort((a, b) => a - b);
       const previous = world.getComponent(trigger.id, TRIGGER_OCCUPANCY)?.occupants ?? [];

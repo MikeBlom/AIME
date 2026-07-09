@@ -3,5 +3,26 @@
   "schemaVersion": "1.0.0",
   "id": "building.control-house",
   "displayNameKey": "building.control-house.name",
-  "interior": { "note": "PLACEHOLDER interior description" }
+  "interior": {
+    "size": { "width": 160, "height": 110 },
+    "spawn": { "x": 80, "y": 88 },
+    "colliders": [
+      { "x": 80, "y": 26, "width": 48, "height": 12 },
+      { "x": 22, "y": 60, "width": 20, "height": 20 }
+    ],
+    "points": [
+      {
+        "id": "point.console",
+        "hintKey": "building.control-house.point.console",
+        "x": 80,
+        "y": 40
+      },
+      {
+        "id": "point.archive",
+        "hintKey": "building.control-house.point.archive",
+        "x": 138,
+        "y": 60
+      }
+    ]
+  }
 }

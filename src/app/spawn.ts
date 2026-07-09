@@ -10,9 +10,12 @@ import type { ResolvedContentGraph } from '../content';
 import type { NpcRoutineEntry } from '../systems';
 import {
   ASSET_MANIFEST,
+  BUILDING,
   CAMERA,
   COLLIDER,
   DIALOGUE,
+  DOORWAY,
+  DOORWAY_SIZE,
   IDLE_MOTION,
   LOCALE_STRINGS,
   LOGICAL_SPACE,
@@ -23,6 +26,7 @@ import {
   POSITION,
   QUEST,
   QUEST_STATE,
+  readInterior,
   REGION,
   REGION_AMBIENT,
   RENDERABLE,
@@ -119,6 +123,11 @@ export function spawnWorld(world: EntityStore, graph: ResolvedContentGraph): Spa
     { kind: 'building', ids: [...stringList(contains['buildings'])].sort(), y: 60 },
     { kind: 'npc', ids: [...stringList(contains['npcs'])].sort(), y: 112 },
   ];
+  const enterable: {
+    readonly buildingId: string;
+    readonly at: { x: number; y: number };
+    readonly height: number;
+  }[] = [];
   for (const row of rows) {
     row.ids.forEach((id, index) => {
       const marker = world.createEntity();
@@ -133,8 +142,22 @@ export function spawnWorld(world: EntityStore, graph: ResolvedContentGraph): Spa
         ...(typeof assetRef === 'string' ? { spriteRef: assetRef } : {}),
       });
       // Markers are the region's world geometry: solid, so the player walks
-      // around them, not through them (issue #20; interiors arrive later).
+      // around them, not through them (issue #20).
       world.addComponent(marker, COLLIDER, { ...size, mode: 'solid' });
+      // Buildings carry their content definition (issue #30): a declared
+      // interior makes the building enterable — the Buildings System
+      // materializes the room on first entry.
+      if (row.kind === 'building') {
+        const interior = readInterior(asRecord(graph.entities.get(id)?.doc)['interior']);
+        world.addComponent(marker, BUILDING, { buildingId: id, interior });
+        if (interior !== null) {
+          enterable.push({
+            buildingId: id,
+            at: markerPosition(index, row.ids.length, row.y),
+            height: size.height,
+          });
+        }
+      }
       // Characters additionally carry their behavior definition (issue
       // #27): routine, dialogue reference, and a motion slice so the NPC
       // System can walk them and route interact presses.
@@ -260,6 +283,22 @@ export function spawnWorld(world: EntityStore, graph: ResolvedContentGraph): Spa
       }));
     const dialogue = world.createEntity();
     world.addComponent(dialogue, DIALOGUE, { dialogueId: id, nodes });
+  }
+
+  // Entry doorways for enterable buildings (issue #30): static world
+  // geometry like the markers, spawned here so a fresh spawn contains every
+  // save-captured entity (save round-trip); appended after the long-standing
+  // entities so earlier ids stay stable. The Buildings System owns the
+  // transitions these triggers start.
+  for (const building of enterable) {
+    const doorway = world.createEntity();
+    world.addComponent(doorway, POSITION, {
+      x: building.at.x,
+      y: building.at.y + building.height / 2 + DOORWAY_SIZE.height / 2,
+    });
+    world.addComponent(doorway, RENDERABLE, { kind: 'doorway', ...DOORWAY_SIZE });
+    world.addComponent(doorway, COLLIDER, { ...DOORWAY_SIZE, mode: 'trigger' });
+    world.addComponent(doorway, DOORWAY, { buildingId: building.buildingId, role: 'entry' });
   }
 
   return { regionId: regionEntity.id, player };

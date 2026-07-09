@@ -180,23 +180,93 @@ const REGION: ContentTypeSpec = {
       : [],
 };
 
+/** A rectangle in room-local units, positioned by its center. */
+const INTERIOR_RECT: ContentSchema = {
+  type: 'object',
+  required: ['x', 'y', 'width', 'height'],
+  properties: {
+    x: { type: 'number' },
+    y: { type: 'number' },
+    width: { type: 'number' },
+    height: { type: 'number' },
+  },
+};
+
+/**
+ * A building's interior (issue #30): room size, player spawn, solid
+ * furnishing colliders, and interaction points, all in room-local units.
+ * A building without this block is set dressing — not enterable.
+ */
+const BUILDING_INTERIOR: ContentSchema = {
+  type: 'object',
+  properties: {
+    size: {
+      type: 'object',
+      required: ['width', 'height'],
+      properties: { width: { type: 'number' }, height: { type: 'number' } },
+    },
+    spawn: {
+      type: 'object',
+      required: ['x', 'y'],
+      properties: { x: { type: 'number' }, y: { type: 'number' } },
+    },
+    colliders: { type: 'array', items: INTERIOR_RECT },
+    points: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['id', 'hintKey', 'x', 'y'],
+        properties: {
+          id: { type: 'string' },
+          hintKey: LOCALE_KEY,
+          x: { type: 'number' },
+          y: { type: 'number' },
+        },
+      },
+    },
+  },
+};
+
 const BUILDING: ContentTypeSpec = {
   schemaType: 'building',
   schemaVersion: '1.0.0',
   schema: base('building', 'building', {
     required: ['displayNameKey'],
-    properties: { displayNameKey: LOCALE_KEY, interior: { type: 'object' } },
+    properties: { displayNameKey: LOCALE_KEY, interior: BUILDING_INTERIOR },
   }),
   example: {
     schemaType: 'building',
     schemaVersion: '1.0.0',
     id: 'building.control-house',
     displayNameKey: 'building.control-house.name',
+    interior: {
+      size: { width: 160, height: 110 },
+      spawn: { x: 80, y: 88 },
+      colliders: [{ x: 80, y: 30, width: 40, height: 12 }],
+      points: [
+        { id: 'point.console', hintKey: 'building.control-house.point.console', x: 80, y: 40 },
+      ],
+    },
   },
-  keys: (doc) =>
-    typeof doc['displayNameKey'] === 'string'
-      ? [{ path: 'displayNameKey', key: doc['displayNameKey'] }]
-      : [],
+  keys: (doc) => {
+    const out: ExtractedKey[] = [];
+    if (typeof doc['displayNameKey'] === 'string') {
+      out.push({ path: 'displayNameKey', key: doc['displayNameKey'] });
+    }
+    const interior =
+      typeof doc['interior'] === 'object' &&
+      doc['interior'] !== null &&
+      !Array.isArray(doc['interior'])
+        ? (doc['interior'] as Readonly<Record<string, ComponentData>>)
+        : undefined;
+    const points =
+      interior !== undefined && Array.isArray(interior['points']) ? interior['points'] : [];
+    points.forEach((point, i) => {
+      const key = (point as Readonly<Record<string, ComponentData>>)['hintKey'];
+      if (typeof key === 'string') out.push({ path: `interior.points[${i}].hintKey`, key });
+    });
+    return out;
+  },
 };
 
 const NPC: ContentTypeSpec = {

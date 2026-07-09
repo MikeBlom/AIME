@@ -24,7 +24,7 @@ import type { EntityId, EntityStore, EventPayload, Plugin, System, SystemContext
 import { defineComponentType, defineEventType } from '../core';
 import type { RenderSurface } from '../platform';
 import { INPUT_INTENT, INTENT_INTERACT } from './input';
-import { PLAYER_CONTROLLED, POSITION, RENDERABLE } from './scene';
+import { PLAYER_CONTROLLED, POSITION, RENDERABLE, spaceOf } from './scene';
 
 /**
  * The pack's default-locale strings (locale key → localized text), landed
@@ -105,22 +105,26 @@ function stringsOf(world: EntityStore): { readonly [key: string]: string } {
   );
 }
 
-/** The player's position, from the first player-controlled entity. */
-function playerPosition(world: EntityStore): { x: number; y: number } | null {
+/** The player's entity and position, from the first player-controlled one. */
+function playerView(world: EntityStore): { entity: EntityId; x: number; y: number } | null {
   for (const entity of world.query(PLAYER_CONTROLLED, POSITION)) {
     const position = world.getComponent(entity, POSITION);
-    if (position !== undefined) return { x: position.x, y: position.y };
+    if (position !== undefined) return { entity, x: position.x, y: position.y };
   }
   return null;
 }
 
 /** True when a prompting marker sits within PROMPT_RADIUS of the player. */
 function nearInteractable(world: EntityStore): boolean {
-  const player = playerPosition(world);
+  const player = playerView(world);
   if (player === null) return false;
+  const playerSpace = spaceOf(world, player.entity);
   for (const entity of world.query(POSITION, RENDERABLE)) {
     const renderable = world.getComponent(entity, RENDERABLE);
     if (renderable === undefined || !PROMPTING_KINDS.has(renderable.kind)) continue;
+    // Markers in another space (an interior while outdoors, the exterior
+    // while inside) never prompt (issue #30).
+    if (spaceOf(world, entity) !== playerSpace) continue;
     const position = world.getComponent(entity, POSITION);
     if (position === undefined) continue;
     const dx = position.x - player.x;

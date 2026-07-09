@@ -40,7 +40,15 @@ import type { KeyValueStorage } from '../platform';
 import { AUDIO_SETTINGS } from './audio';
 import { QUEST_STATE, SYSTEM_RESTORED } from './quest';
 import { CAMERA } from './render';
-import { MOTION, MOVEMENT_STOPPED, POSITION, REGION, REGION_ENTERED } from './scene';
+import {
+  ACTIVE_SPACE,
+  MOTION,
+  MOVEMENT_STOPPED,
+  POSITION,
+  REGION,
+  REGION_ENTERED,
+  SPACE,
+} from './scene';
 
 /** The envelope's format tag; a stored value without it is not a save. */
 export const SAVE_FORMAT = 'world.save';
@@ -63,6 +71,10 @@ export const PROGRESSION_SLICES: readonly ComponentType<ComponentData>[] = [
   CAMERA,
   AUDIO_SETTINGS,
   QUEST_STATE,
+  // Which space each entity inhabits and the active-space slice (issue
+  // #30), so a session saved inside a building resumes inside it.
+  SPACE,
+  ACTIVE_SPACE,
 ];
 
 /** Gameplay events that trigger an autosave on the following update. */
