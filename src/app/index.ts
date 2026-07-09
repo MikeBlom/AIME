@@ -8,5 +8,13 @@ export type { BootWorldOptions, WorldHandle } from './boot';
 export { buildDebugSnapshot, formatDebugOverlay } from './debug';
 export type { DebugEventEntry, DebugSnapshot } from './debug';
 export { packFilesFromBundle } from './pack-bundle';
+export {
+  checkCiBudgets,
+  createFrameProfiler,
+  formatViolations,
+  PERF_BUDGETS,
+  PROFILE_WINDOW,
+} from './perf';
+export type { BudgetViolation, CiPerfMeasurements, FrameProfile, FrameProfiler } from './perf';
 export { spawnWorld } from './spawn';
 export type { SpawnedWorld } from './spawn';

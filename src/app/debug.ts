@@ -8,6 +8,8 @@
  * its labels are technical identifiers rather than locale keys.
  */
 import type { EventBus, ModuleRegistry, RuntimeLoop, SystemTiming } from '../core';
+import type { FrameProfile } from './perf';
+import { PERF_BUDGETS } from './perf';
 
 export interface DebugEventEntry {
   readonly seq: number;
@@ -25,6 +27,8 @@ export interface DebugSnapshot {
   readonly systems: readonly string[];
   readonly timings: readonly SystemTiming[];
   readonly events: readonly DebugEventEntry[];
+  /** Rolling step-cost profile vs. budgets (FR-PERF-006); null when absent. */
+  readonly profile: FrameProfile | null;
 }
 
 /** Number of trailing event-log entries the overlay shows. */
@@ -34,6 +38,7 @@ export function buildDebugSnapshot(
   loop: RuntimeLoop,
   registry: ModuleRegistry,
   events: EventBus,
+  profile: FrameProfile | null = null,
 ): DebugSnapshot {
   const time = loop.context.time;
   return {
@@ -50,15 +55,27 @@ export function buildDebugSnapshot(
       type: entry.type,
       delivery: entry.delivery,
     })),
+    profile,
   };
 }
 
 /** Render the snapshot as the overlay's monospace text block. */
 export function formatDebugOverlay(snapshot: DebugSnapshot): string {
+  const budgetMs = PERF_BUDGETS.stepMs.laptop;
+  const profileLine =
+    snapshot.profile === null || snapshot.profile.frames === 0
+      ? []
+      : [
+          `profile: step avg ${snapshot.profile.avgMs.toFixed(3)}ms  ` +
+            `worst ${snapshot.profile.worstMs.toFixed(3)}ms  ` +
+            `budget ${budgetMs.toFixed(1)}ms (last ${snapshot.profile.frames})` +
+            (snapshot.profile.avgMs > budgetMs ? '  [over budget]' : ''),
+        ];
   const lines = [
     `frame ${snapshot.frame}  step ${snapshot.step}  sim ${snapshot.simSeconds.toFixed(2)}s` +
       (snapshot.paused ? '  [paused]' : ''),
     `faults ${snapshot.faultCount}`,
+    ...profileLine,
     'systems:',
     ...snapshot.systems.map((id) => {
       const timing = snapshot.timings.find((t) => t.systemId === id);
