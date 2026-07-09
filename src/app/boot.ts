@@ -20,6 +20,7 @@ import {
   createQuestPlugin,
   createSaveLoadPlugin,
   createUiPlugin,
+  createWorldSimPlugin,
   inputPlugin,
   loadWorld,
   uiFrame,
@@ -86,6 +87,7 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
   // character motion inside the same step's constraint sweep.
   registry.register(createNpcPlugin());
   registry.register(physicsPlugin);
+  registry.register(createWorldSimPlugin());
   registry.register(createQuestPlugin());
   registry.register(createDialoguePlugin());
   registry.register(createAnimationPlugin());

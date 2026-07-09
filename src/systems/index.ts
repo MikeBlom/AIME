@@ -184,3 +184,15 @@ export {
   uiLayout,
 } from './ui';
 export type { DialogueSurface, LocaleStrings, UiState } from './ui';
+export {
+  AMBIENT_CLIP_PREFIX,
+  AMBIENT_EVENT,
+  AMBIENT_KINDS,
+  AMBIENT_MAX_INTERVAL,
+  AMBIENT_MIN_INTERVAL,
+  AMBIENT_NEARBY_RADIUS,
+  createWorldSimPlugin,
+  createWorldSimSystem,
+  WORLD_SIM,
+} from './worldsim';
+export type { WorldSimState } from './worldsim';
