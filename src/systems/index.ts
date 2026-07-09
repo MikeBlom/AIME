@@ -296,8 +296,20 @@ export {
 } from './saveload';
 export type { SaveEnvelope, SaveLoadOptions, SaveMigration } from './saveload';
 export {
+  activeLocaleOf,
+  availableLocales,
+  createLocalePlugin,
+  createLocaleSystem,
+  LOCALE_SELECT,
+  LOCALE_STATE,
+  LOCALE_TABLES,
+  resolveLocaleEntries,
+} from './locale';
+export type { LocaleState, LocaleTables } from './locale';
+export {
   createUiPlugin,
   createUiSystem,
+  fitText,
   IDLE_UI_STATE,
   LOCALE_STRINGS,
   PROMPT_RADIUS,

@@ -24,10 +24,12 @@ import {
   INTENT_SETTINGS,
 } from './input';
 import type { InputIntent } from './input';
+import { LOCALE_SELECT, LOCALE_TABLES } from './locale';
 import { movementSystem } from './movement';
 import { IDLE_MOTION, MOTION, PLAYER_CONTROLLED, POSITION, RENDERABLE } from './scene';
 import {
   createUiSystem,
+  fitText,
   LOCALE_STRINGS,
   PROMPT_RADIUS,
   SETTINGS_ROWS,
@@ -473,10 +475,71 @@ describe('settings surface (docs/34: keyboard-only, FR-A11Y-005)', () => {
     uiFrame(h.context, platform.render);
     const texts = platform.render.commands.filter((c) => c['op'] === 'drawText');
     expect(texts[0]).toMatchObject({ text: 'LOCALIZED settings' });
-    // The toggle row shows its label plus the off state; unresolved row
-    // labels draw nothing — never a raw key (DATA-FR-011).
-    expect(texts.map((t) => t['text'])).toContain('LOCALIZED reduced motion  LOCALIZED off');
+    // The toggle row shows its label plus the off state (clipped to the
+    // panel's budget, DATA-FR-026); unresolved row labels draw nothing —
+    // never a raw key (DATA-FR-011).
+    const rowText = texts.map((t) => t['text'] as string).find((t) => t !== 'LOCALIZED settings');
+    expect(rowText?.startsWith('LOCALIZED reduced motion')).toBe(true);
     expect(texts).toHaveLength(2);
+  });
+});
+
+describe('locale row and length tolerance (issue #38)', () => {
+  it('interact on the locale row cycles the shipped locales by event', () => {
+    const h = harness();
+    h.world.addComponent(h.world.createEntity(), LOCALE_TABLES, {
+      defaultLocale: 'en',
+      locales: { en: {}, xl: {} },
+    });
+    const selects: unknown[] = [];
+    h.events.subscribe(LOCALE_SELECT, (event) => selects.push(event.payload));
+
+    h.events.publish(INTENT_SETTINGS, {});
+    h.step();
+    const localeIndex = SETTINGS_ROWS.findIndex((row) => row.kind === 'locale');
+    for (let i = 0; i < localeIndex; i += 1) {
+      setIntent(h.world, { ...IDLE_INTENT, moveY: 1 });
+      h.step();
+      setIntent(h.world, IDLE_INTENT);
+      h.step();
+    }
+    h.events.publish(INTENT_INTERACT, {});
+    h.step();
+    h.events.flushDeferred();
+    expect(selects).toEqual([{ locale: 'xl' }]); // en → next in sorted order
+  });
+
+  it('fitText clips to the pixel budget with an ellipsis, never past it', () => {
+    expect(fitText('short', 16, 384)).toBe('short');
+    const long = 'x'.repeat(200);
+    const clipped = fitText(long, 16, 100);
+    expect(clipped.length).toBeLessThan(long.length);
+    expect(clipped.endsWith('…')).toBe(true);
+    expect(clipped.length * 16 * 0.62).toBeLessThanOrEqual(100 + 16 * 0.62);
+  });
+
+  it('an overlong localized line stays inside its panel on a small viewport (AC2)', () => {
+    const h = harness();
+    const surface = { width: 180, height: 320 };
+    const platform = createHeadlessPlatform(surface);
+    const long = `LOCALIZED ${'very '.repeat(60)}long line`;
+    addStrings(h.world, { 'k.line': long, 'k.a': long });
+    h.events.publish(UI_DIALOGUE_OPEN, { textKey: 'k.line', choiceKeys: ['k.a'] });
+    h.step();
+    uiFrame(h.context, platform.render);
+
+    const { fontPx, pad, panelWidth } = uiLayout(surface);
+    const panel = platform.render.commands.find((c) => c['op'] === 'fillRect');
+    expect((panel?.['x'] as number) + (panel?.['width'] as number)).toBeLessThanOrEqual(
+      surface.width,
+    );
+    for (const text of platform.render.commands.filter((c) => c['op'] === 'drawText')) {
+      const drawn = text['text'] as string;
+      expect(drawn.length).toBeLessThan(long.length); // clipped, not overflowing
+      expect((text['x'] as number) + drawn.length * fontPx * 0.62).toBeLessThanOrEqual(
+        (panel?.['x'] as number) + panelWidth + pad,
+      );
+    }
   });
 });
 

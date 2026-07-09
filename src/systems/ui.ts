@@ -43,15 +43,12 @@ import {
   INTENT_INTERACT,
   INTENT_SETTINGS,
 } from './input';
+import { activeLocaleOf, availableLocales, LOCALE_SELECT, LOCALE_STRINGS } from './locale';
+import type { LocaleStrings } from './locale';
 import { PLAYER_CONTROLLED, POSITION, RENDERABLE, spaceOf } from './scene';
 
-/**
- * The pack's default-locale strings (locale key → localized text), landed
- * in world state at spawn exactly like the asset manifest, so UI resolves
- * player-visible text without reaching into the content graph.
- */
-export type LocaleStrings = { readonly entries: { readonly [key: string]: string } };
-export const LOCALE_STRINGS = defineComponentType<LocaleStrings>('locale-strings');
+export { LOCALE_STRINGS };
+export type { LocaleStrings };
 
 /** The dialogue surface: a speaker line plus optional player choices. */
 export type DialogueSurface = {
@@ -125,24 +122,27 @@ export const UI_SETTINGS_ON_KEY = 'ui.settings.on';
 export const UI_SETTINGS_OFF_KEY = 'ui.settings.off';
 export const UI_SETTINGS_REBIND_KEY = 'ui.settings.rebind';
 
-/** One settings row: an accessibility toggle or a remappable action. */
+/** One settings row: a toggle, the locale selector, or a remappable action. */
 export type SettingsRow =
   | {
       readonly kind: 'toggle';
       readonly setting: 'reducedMotion' | 'narration';
       readonly labelKey: string;
     }
+  | { readonly kind: 'locale'; readonly labelKey: string }
   | { readonly kind: 'remap'; readonly action: string; readonly labelKey: string };
 
 /**
  * The settings rows, engine-defined by generic vocabulary (labels are
- * locale keys, values world state): the accessibility toggles, then one
- * remap row per rebindable action. The `settings` action itself is not
- * offered for remapping, so the surface can always be closed.
+ * locale keys, values world state): the accessibility toggles, the locale
+ * selector (issue #38 — interact cycles the pack's shipped locales), then
+ * one remap row per rebindable action. The `settings` action itself is
+ * not offered for remapping, so the surface can always be closed.
  */
 export const SETTINGS_ROWS: readonly SettingsRow[] = [
   { kind: 'toggle', setting: 'reducedMotion', labelKey: 'ui.settings.reduced-motion' },
   { kind: 'toggle', setting: 'narration', labelKey: 'ui.settings.narration' },
+  { kind: 'locale', labelKey: 'ui.settings.locale' },
   { kind: 'remap', action: 'move-left', labelKey: 'ui.settings.action.move-left' },
   { kind: 'remap', action: 'move-right', labelKey: 'ui.settings.action.move-right' },
   { kind: 'remap', action: 'move-up', labelKey: 'ui.settings.action.move-up' },
@@ -358,6 +358,7 @@ export function createUiSystem(): System {
         strings[enabled ? UI_SETTINGS_ON_KEY : UI_SETTINGS_OFF_KEY];
       const rowValue = (row: SettingsRow): string | undefined => {
         if (row.kind === 'toggle') return toggleText(accessibilitySettingsOf(world)[row.setting]);
+        if (row.kind === 'locale') return activeLocaleOf(world);
         return (activeBindings(world)[row.action] ?? []).join(' ');
       };
 
@@ -458,6 +459,16 @@ export function createUiSystem(): System {
                   : { narration: flipped },
               );
               announceRow(row, toggleText(flipped));
+            } else if (row?.kind === 'locale') {
+              // Cycle the pack's shipped locales (issue #38); the Locale
+              // System applies the switch — requested only by event.
+              const locales = availableLocales(world);
+              const index = locales.indexOf(activeLocaleOf(world));
+              const next = locales[(index + 1) % Math.max(1, locales.length)];
+              if (next !== undefined) {
+                context.events.publish(LOCALE_SELECT, { locale: next });
+                announceRow(row, next);
+              }
             } else if (row?.kind === 'remap') {
               settings = { ...settings, capture: row.action };
               announceKey(UI_SETTINGS_REBIND_KEY);
@@ -545,6 +556,22 @@ export function uiLayout(surface: { readonly width: number; readonly height: num
   return { fontPx, pad, panelWidth: Math.max(0, panelWidth) };
 }
 
+/** Estimated glyph advance for the system face, in px per character. */
+const CHAR_WIDTH_FACTOR = 0.62;
+
+/**
+ * Clip one line of text to a pixel budget (DATA-FR-026): no layout may
+ * assume string length, so an overlong localized string truncates with an
+ * ellipsis instead of escaping its panel. The estimate matches the prompt
+ * pill's sizing heuristic; measured wrapping stays an open question
+ * (docs/35, OQ-UI-2).
+ */
+export function fitText(text: string, fontPx: number, maxWidth: number): string {
+  const budget = Math.max(1, Math.floor(maxWidth / (fontPx * CHAR_WIDTH_FACTOR)));
+  if (text.length <= budget) return text;
+  return `${text.slice(0, Math.max(1, budget - 1))}…`;
+}
+
 /**
  * Draw one presentation frame of UI above the world: the hint line (top
  * center), the interaction prompt (bottom center pill), and the dialogue
@@ -580,7 +607,11 @@ export function uiFrame(context: SystemContext, render: RenderSurface): void {
   if (state.hint !== null) {
     const text = strings[state.hint];
     if (text !== undefined) {
-      render.drawText(text, centerX, pad, { color: CHOICE_COLOR, sizePx: fontPx, align: 'center' });
+      render.drawText(fitText(text, fontPx, surface.width - 2 * pad), centerX, pad, {
+        color: CHOICE_COLOR,
+        sizePx: fontPx,
+        align: 'center',
+      });
     }
   }
 
@@ -599,7 +630,10 @@ export function uiFrame(context: SystemContext, render: RenderSurface): void {
     let y = top + pad;
     const title = strings[UI_SETTINGS_TITLE_KEY];
     if (title !== undefined) {
-      render.drawText(title, left + pad, y, { color: TEXT_COLOR, sizePx: fontPx });
+      render.drawText(fitText(title, fontPx, panelWidth - 2 * pad), left + pad, y, {
+        color: TEXT_COLOR,
+        sizePx: fontPx,
+      });
     }
     y += lineHeight;
     const settingsValues = accessibilitySettingsOf(world);
@@ -610,13 +644,15 @@ export function uiFrame(context: SystemContext, render: RenderSurface): void {
       const value =
         row.kind === 'toggle'
           ? strings[settingsValues[row.setting] ? UI_SETTINGS_ON_KEY : UI_SETTINGS_OFF_KEY]
-          : capturing
-            ? strings[UI_SETTINGS_REBIND_KEY]
-            : (bindings[row.action] ?? []).join(' ');
+          : row.kind === 'locale'
+            ? activeLocaleOf(world)
+            : capturing
+              ? strings[UI_SETTINGS_REBIND_KEY]
+              : (bindings[row.action] ?? []).join(' ');
       if (label !== undefined) {
         const selected = index === state.settings?.selected;
         const text = value === undefined || value === '' ? label : `${label}  ${value}`;
-        render.drawText(text, left + pad * 2, y, {
+        render.drawText(fitText(text, fontPx, panelWidth - 3 * pad), left + pad * 2, y, {
           color: selected ? CHOICE_SELECTED_COLOR : CHOICE_COLOR,
           sizePx: fontPx,
         });
@@ -637,13 +673,16 @@ export function uiFrame(context: SystemContext, render: RenderSurface): void {
     render.drawLine(left, top, left + panelWidth, top, PANEL_EDGE_COLOR);
     let y = top + pad;
     if (text !== undefined) {
-      render.drawText(text, left + pad, y, { color: TEXT_COLOR, sizePx: fontPx });
+      render.drawText(fitText(text, fontPx, panelWidth - 2 * pad), left + pad, y, {
+        color: TEXT_COLOR,
+        sizePx: fontPx,
+      });
     }
     y += lineHeight;
     choices.forEach((choice, index) => {
       if (choice === undefined) return;
       const selected = index === state.dialogue?.selected;
-      render.drawText(choice, left + pad * 2, y, {
+      render.drawText(fitText(choice, fontPx, panelWidth - 3 * pad), left + pad * 2, y, {
         color: selected ? CHOICE_SELECTED_COLOR : CHOICE_COLOR,
         sizePx: fontPx,
       });
@@ -653,10 +692,14 @@ export function uiFrame(context: SystemContext, render: RenderSurface): void {
   }
 
   if (state.prompt !== null) {
-    const text = strings[state.prompt];
-    if (text !== undefined) {
+    const raw = strings[state.prompt];
+    if (raw !== undefined) {
+      const text = fitText(raw, fontPx, panelWidth - 2 * pad);
       const pillHeight = fontPx + 2 * pad;
-      const pillWidth = Math.min(panelWidth, Math.max(120, text.length * fontPx * 0.62));
+      const pillWidth = Math.min(
+        panelWidth,
+        Math.max(120, text.length * fontPx * CHAR_WIDTH_FACTOR),
+      );
       const top = surface.height - pillHeight - pad;
       render.fillRect(centerX - pillWidth / 2, top, pillWidth, pillHeight, PANEL_COLOR);
       render.drawText(text, centerX, top + pad, {
