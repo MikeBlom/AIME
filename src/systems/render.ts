@@ -47,6 +47,16 @@ export const RENDER_MOTION = defineComponentType<RenderMotion>('render-motion');
 export type AssetManifest = { readonly entries: { readonly [assetId: string]: string } };
 export const ASSET_MANIFEST = defineComponentType<AssetManifest>('asset-manifest');
 
+/**
+ * The environment lighting hook: a translucent overlay color drawn above
+ * the world (null = no overlay). Defined here like CAMERA — rendering owns
+ * the vocabulary it consumes — and written by the environment System,
+ * which owns the value (FR-ARCH-015). Rendering tolerates its absence
+ * entirely (FR-ARCH-008).
+ */
+export type EnvironmentLight = { readonly tint: string | null };
+export const ENVIRONMENT_LIGHT = defineComponentType<EnvironmentLight>('environment-light');
+
 /** Default draw layer per generic renderable kind; `layer` overrides. */
 const KIND_LAYERS: ReadonlyMap<string, number> = new Map([
   ['building', 0],
@@ -225,6 +235,23 @@ export function renderFrame(
       render.fillRect(x, y, width, height, KIND_COLORS.get(renderable.kind) ?? FALLBACK_COLOR);
     }
   }
+
+  // The environment lighting overlay (issue #29): a translucent tint above
+  // the world, below UI. Absent or null draws nothing.
+  const tint =
+    world
+      .query(ENVIRONMENT_LIGHT)
+      .map((entity) => world.getComponent(entity, ENVIRONMENT_LIGHT)?.tint)
+      .find((value) => value !== undefined) ?? null;
+  if (tint !== null) {
+    render.fillRect(
+      offsetX,
+      offsetY,
+      LOGICAL_SPACE.width * scale,
+      LOGICAL_SPACE.height * scale,
+      tint,
+    );
+  }
 }
 
 /**
@@ -234,5 +261,5 @@ export function renderFrame(
 export const renderPlugin: Plugin = {
   id: 'plugin.render',
   systems: [renderSystem],
-  componentTypes: [CAMERA, RENDER_MOTION, ASSET_MANIFEST],
+  componentTypes: [CAMERA, RENDER_MOTION, ASSET_MANIFEST, ENVIRONMENT_LIGHT],
 };

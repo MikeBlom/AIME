@@ -100,6 +100,23 @@ export {
 } from './quest';
 export type { ObjectiveStatus, QuestDefinition, QuestObjective, QuestState } from './quest';
 export {
+  createEnvironmentPlugin,
+  createEnvironmentSystem,
+  DAY_SECONDS,
+  DEFAULT_WEATHER_STATES,
+  ENVIRONMENT,
+  NIGHT_SECONDS,
+  NIGHT_TINT,
+  PHASE_DAY,
+  PHASE_NIGHT,
+  REGION_AMBIENT,
+  WEATHER_CHANGED,
+  WEATHER_MAX_SECONDS,
+  WEATHER_MIN_SECONDS,
+  WEATHER_PROFILES,
+} from './environment';
+export type { EnvironmentState, RegionAmbient } from './environment';
+export {
   createDialoguePlugin,
   createDialogueSystem,
   DIALOGUE,
@@ -119,13 +136,14 @@ export type {
 export {
   ASSET_MANIFEST,
   CAMERA,
+  ENVIRONMENT_LIGHT,
   RENDER_MOTION,
   renderFrame,
   renderPlugin,
   renderSystem,
   viewTransform,
 } from './render';
-export type { AssetManifest, Camera, RenderMotion } from './render';
+export type { AssetManifest, Camera, EnvironmentLight, RenderMotion } from './render';
 export {
   fitTransform,
   IDLE_MOTION,

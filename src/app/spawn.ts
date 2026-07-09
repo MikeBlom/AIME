@@ -24,6 +24,7 @@ import {
   QUEST,
   QUEST_STATE,
   REGION,
+  REGION_AMBIENT,
   RENDERABLE,
 } from '../systems';
 
@@ -103,6 +104,14 @@ export function spawnWorld(world: EntityStore, graph: ResolvedContentGraph): Spa
   world.addComponent(region, REGION, {
     contentId: regionEntity.id,
     state: typeof initialState === 'string' ? initialState : 'offline',
+  });
+  // The region's ambient block (issue #29): which weather profile applies
+  // and whether the day/night cycle runs — the world clock is content's
+  // opt-in, never an engine assumption.
+  const ambient = asRecord(doc['ambient']);
+  world.addComponent(region, REGION_AMBIENT, {
+    weatherProfile: typeof ambient['weatherProfile'] === 'string' ? ambient['weatherProfile'] : '',
+    dayNight: ambient['dayNight'] === true,
   });
 
   const contains = asRecord(doc['contains']);
