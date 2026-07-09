@@ -14,6 +14,7 @@ import {
   animationPoses,
   createAchievementsPlugin,
   createAnimationPlugin,
+  createAssemblyPlugin,
   createAudioPlugin,
   createBuildingPlugin,
   createCameraPlugin,
@@ -21,8 +22,10 @@ import {
   createEnvironmentPlugin,
   createMinigameHostPlugin,
   createNpcPlugin,
+  createOrchestratePlugin,
   createProgressionPlugin,
   createQuestPlugin,
+  createRouteAndBalancePlugin,
   createSaveLoadPlugin,
   createUiPlugin,
   createWorldSimPlugin,
@@ -102,6 +105,9 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
   // mechanic resolutions into the quest engine's result feed. Mechanic
   // plugins from the catalog (#34) register after it.
   registry.register(createMinigameHostPlugin());
+  registry.register(createRouteAndBalancePlugin());
+  registry.register(createAssemblyPlugin());
+  registry.register(createOrchestratePlugin());
   // After quest: progression records the resolutions the quest engine
   // announced this step (issue #31).
   registry.register(createProgressionPlugin());

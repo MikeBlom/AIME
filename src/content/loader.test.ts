@@ -4,7 +4,7 @@ import type { Diagnostic } from './diagnostics.js';
 import type { PackFiles } from './loader.js';
 import { ENGINE_VERSION, PackLoadError, loadPack, validatePack } from './loader.js';
 import { validateAgainstSchema } from './schema-validator.js';
-import { CONTENT_SCHEMAS } from './schemas.js';
+import { CONTENT_SCHEMAS, ENGINE_MECHANIC_PARAMS, ENGINE_MECHANICS } from './schemas.js';
 
 /** Build a minimal valid pack as in-memory files, overridable per test. */
 function makePack(overrides: Record<string, ComponentData | undefined> = {}): PackFiles {
@@ -188,14 +188,37 @@ describe('rejection diagnostics name document, field, and value (AC1)', () => {
       validatePack(good, { mechanicParams: { 'engine.mechanic.route-and-balance': paramsSchema } })
         .graph,
     ).not.toBeNull();
-    // No published schema (the default map): the same params pass untouched.
-    expect(validatePack(good).graph).not.toBeNull();
+    // A mechanic with no published schema accepts any params shape.
+    expect(validatePack(good, { mechanicParams: {} }).graph).not.toBeNull();
     // A missing params block fails a schema that requires fields.
     const missing = makePack();
     const { diagnostics } = validatePack(missing, {
       mechanicParams: { 'engine.mechanic.route-and-balance': paramsSchema },
     });
     expect(errors(diagnostics).find((d) => d.path === 'params.target')).toBeDefined();
+  });
+
+  it('the catalog mechanics publish params schemas enforced by default (issue #34)', () => {
+    // Every engine mechanic in the catalog carries a published schema.
+    for (const mechanic of ENGINE_MECHANICS) {
+      expect(ENGINE_MECHANIC_PARAMS[mechanic], mechanic).toBeDefined();
+    }
+    const files = makePack({
+      'metaphors/one.json': {
+        schemaType: 'metaphor',
+        schemaVersion: '1.0.0',
+        id: 'metaphor.one',
+        mechanic: 'engine.mechanic.route-and-balance',
+        params: { load: 'heavy' },
+        framingKey: 'metaphor.one.framing',
+      },
+    });
+    const { diagnostics, graph } = validatePack(files);
+    expect(graph).toBeNull();
+    expect(errors(diagnostics).find((d) => d.path === 'params.load')).toMatchObject({
+      file: 'metaphors/one.json',
+      got: 'heavy',
+    });
   });
 
   it('rejects a missing default-locale key naming the document and key (DATA-FR-015)', () => {
