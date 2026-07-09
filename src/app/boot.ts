@@ -21,6 +21,7 @@ import {
   loadWorld,
   uiFrame,
   movementPlugin,
+  physicsPlugin,
   pointerToLogical,
   renderFrame,
   renderPlugin,
@@ -78,6 +79,7 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
   registry.register(scenePlugin);
   registry.register(inputPlugin);
   registry.register(movementPlugin);
+  registry.register(physicsPlugin);
   registry.register(createAnimationPlugin());
   registry.register(createCameraPlugin());
   const saveLoadOptions = { pack: { id: graph.packId, version: graph.packVersion } };
