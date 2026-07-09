@@ -47,6 +47,7 @@ import {
 } from '../systems';
 import type { DebugSnapshot } from './debug';
 import { buildDebugSnapshot, formatDebugOverlay } from './debug';
+import { createFrameProfiler } from './perf';
 import type { SpawnedWorld } from './spawn';
 import { spawnWorld } from './spawn';
 
@@ -140,6 +141,12 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
   const spawned = spawnWorld(world, graph);
   events.publish(REGION_ENTERED, { regionId: spawned.regionId });
 
+  // Profiling (issue #40, FR-PERF-006): rolling aggregates over the step
+  // costs the loop's probe already measures. Observability only — recorded
+  // at presentation, never read by simulation (FR-PERF-007).
+  const profiler = createFrameProfiler();
+  let profiledStep = -1;
+
   const loop = new RuntimeLoop(
     registry,
     {
@@ -174,7 +181,17 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
       onPresent: (alpha: number, context: SystemContext) => {
         renderFrame(alpha, context, platform.render, animationPoses(alpha, context));
         uiFrame(context, platform.render);
-        options.onOverlayText?.(formatDebugOverlay(buildDebugSnapshot(loop, registry, events)));
+        // Record the latest step's total System cost once per step; frames
+        // that ran no step would only repeat stale timings.
+        if (context.time.step !== profiledStep) {
+          profiledStep = context.time.step;
+          let stepMs = 0;
+          for (const timing of loop.lastFrameTimings) stepMs += timing.milliseconds;
+          profiler.record(stepMs);
+        }
+        options.onOverlayText?.(
+          formatDebugOverlay(buildDebugSnapshot(loop, registry, events, profiler.summary())),
+        );
       },
       monotonicNowMs: () => platform.timers.monotonicNowMs(),
     },
@@ -188,7 +205,7 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
     world,
     graph,
     spawned,
-    debugSnapshot: () => buildDebugSnapshot(loop, registry, events),
+    debugSnapshot: () => buildDebugSnapshot(loop, registry, events, profiler.summary()),
     start: () => {
       const stop = loop.run((onFrame) => platform.timers.frameTicker(onFrame));
       // Safe resume (issue #24): overlay the stored progression save after
