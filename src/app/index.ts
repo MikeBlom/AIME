@@ -7,6 +7,14 @@ export { bootWorld } from './boot';
 export type { BootWorldOptions, WorldHandle } from './boot';
 export { buildDebugSnapshot, formatDebugOverlay } from './debug';
 export type { DebugEventEntry, DebugSnapshot } from './debug';
+export {
+  createFaultReporter,
+  faultMessage,
+  formatFault,
+  FULL_REPORTS_PER_SYSTEM,
+  SUMMARY_EVERY,
+} from './faults';
+export type { FaultReporter } from './faults';
 export { packFilesFromBundle } from './pack-bundle';
 export {
   checkCiBudgets,

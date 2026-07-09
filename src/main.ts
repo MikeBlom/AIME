@@ -24,6 +24,9 @@ export function bootBrowser(): (() => void) | null {
     packFiles: packFilesFromBundle(),
     seed: DEFAULT_SEED,
     onOverlayText: host.setOverlayText,
+    // Centralized fault reporting (issue #42): isolated System faults land
+    // on the console with context, rate-limited (docs/43).
+    onFaultLine: (line) => console.error(line),
     // Safe resume (issue #24): a returning visitor continues where they
     // left off; a missing or incompatible save starts fresh.
     resume: true,

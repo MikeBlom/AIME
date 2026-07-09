@@ -47,6 +47,7 @@ import {
 } from '../systems';
 import type { DebugSnapshot } from './debug';
 import { buildDebugSnapshot, formatDebugOverlay } from './debug';
+import { createFaultReporter } from './faults';
 import { createFrameProfiler } from './perf';
 import type { SpawnedWorld } from './spawn';
 import { spawnWorld } from './spawn';
@@ -61,6 +62,13 @@ export interface BootWorldOptions {
   readonly seed: number;
   /** Receives the formatted debug overlay text once per presented frame. */
   readonly onOverlayText?: (text: string) => void;
+  /**
+   * Receives centralized fault-report lines (issue #42, FR-OBS-001..003):
+   * each isolated System fault formatted with context and rate-limited.
+   * The host decides where lines go; omitted means no report sink, with
+   * behavior otherwise identical.
+   */
+  readonly onFaultLine?: (line: string) => void;
   /**
    * Safe resume: after spawning, overlay the progression save from the
    * platform storage when one exists and matches this pack (issue #24).
@@ -147,6 +155,11 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
   const profiler = createFrameProfiler();
   let profiledStep = -1;
 
+  // Centralized fault reporting (issue #42): the loop isolates, the
+  // reporter formats and throttles, the host's sink receives (FR-OBS-003).
+  const faultReporter =
+    options.onFaultLine === undefined ? null : createFaultReporter(options.onFaultLine);
+
   const loop = new RuntimeLoop(
     registry,
     {
@@ -194,6 +207,7 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
         );
       },
       monotonicNowMs: () => platform.timers.monotonicNowMs(),
+      ...(faultReporter === null ? {} : { onFault: (fault) => faultReporter.handle(fault) }),
     },
   );
 
