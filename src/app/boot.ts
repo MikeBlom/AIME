@@ -16,6 +16,7 @@ import {
   createAudioPlugin,
   createCameraPlugin,
   createDialoguePlugin,
+  createEnvironmentPlugin,
   createNpcPlugin,
   createQuestPlugin,
   createSaveLoadPlugin,
@@ -88,6 +89,7 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
   registry.register(createNpcPlugin());
   registry.register(physicsPlugin);
   registry.register(createWorldSimPlugin());
+  registry.register(createEnvironmentPlugin());
   registry.register(createQuestPlugin());
   registry.register(createDialoguePlugin());
   registry.register(createAnimationPlugin());
