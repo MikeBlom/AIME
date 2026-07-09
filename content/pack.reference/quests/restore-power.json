@@ -5,11 +5,23 @@
   "titleKey": "quest.restore-power.title",
   "regionRef": "region.arrival",
   "metaphorRef": "metaphor.distributed-systems",
-  "objectives": [{ "id": "obj.route-power", "descriptionKey": "quest.restore-power.obj.route" }],
+  "objectives": [
+    {
+      "id": "obj.route-power",
+      "descriptionKey": "quest.restore-power.obj.route"
+    }
+  ],
   "onComplete": {
     "emits": ["SystemRestored"],
     "revealsKey": "quest.restore-power.reveal",
-    "worldEffect": "PLACEHOLDER region.arrival -> online"
+    "worldEffect": "PLACEHOLDER region.arrival -> online",
+    "grants": {
+      "capabilities": ["capability.yard-power"],
+      "items": ["item.control-house-key"]
+    }
   },
-  "bypass": { "allowed": true, "revealsKey": "quest.restore-power.reveal" }
+  "bypass": {
+    "allowed": true,
+    "revealsKey": "quest.restore-power.reveal"
+  }
 }

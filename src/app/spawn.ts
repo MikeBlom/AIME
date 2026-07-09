@@ -231,6 +231,7 @@ export function spawnWorld(world: EntityStore, graph: ResolvedContentGraph): Spa
         descriptionKey: objective['descriptionKey'] as string,
       }));
     const onComplete = asRecord(questDoc['onComplete']);
+    const grants = asRecord(onComplete['grants']);
     const bypass = asRecord(questDoc['bypass']);
     const definition = {
       questId: id,
@@ -241,6 +242,10 @@ export function spawnWorld(world: EntityStore, graph: ResolvedContentGraph): Spa
       revealsKey: typeof onComplete['revealsKey'] === 'string' ? onComplete['revealsKey'] : null,
       bypassAllowed: bypass['allowed'] === true,
       bypassRevealsKey: typeof bypass['revealsKey'] === 'string' ? bypass['revealsKey'] : null,
+      // Completion grants (issue #31): capability and item ids the
+      // Progression System records when this quest completes.
+      grantsCapabilities: stringList(grants['capabilities']),
+      grantsItems: stringList(grants['items']),
     };
     const quest = world.createEntity();
     world.addComponent(quest, QUEST, definition);

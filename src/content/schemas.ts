@@ -323,6 +323,15 @@ const QUEST: ContentTypeSpec = {
           emits: { type: 'array', items: { type: 'string' } },
           revealsKey: LOCALE_KEY,
           worldEffect: { type: 'string' },
+          // Completion grants (issue #31): capability and item ids the
+          // Progression System records; ids are pack vocabulary.
+          grants: {
+            type: 'object',
+            properties: {
+              capabilities: { type: 'array', items: idOf('capability') },
+              items: { type: 'array', items: idOf('item') },
+            },
+          },
         },
       },
       bypass: {
