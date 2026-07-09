@@ -1,0 +1,9 @@
+{
+  "schemaType": "region",
+  "schemaVersion": "1.0.0",
+  "id": "region.signal-ridge",
+  "displayNameKey": "region.signal-ridge.name",
+  "state": { "initial": "offline" },
+  "bounds": { "note": "PLACEHOLDER the high line where every route converges" },
+  "ambient": { "weatherProfile": "windy", "dayNight": true }
+}

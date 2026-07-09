@@ -1,0 +1,9 @@
+{
+  "schemaType": "metaphor",
+  "schemaVersion": "1.0.0",
+  "id": "metaphor.steady-guidance",
+  "accomplishment": "PLACEHOLDER: a kept-the-light-on accomplishment for a different creator; never rendered",
+  "mechanic": "engine.mechanic.orchestrate",
+  "params": { "tracks": [{ "periodSeconds": 2, "windowSeconds": 0.5 }] },
+  "framingKey": "metaphor.steady-guidance.framing"
+}

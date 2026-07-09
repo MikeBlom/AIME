@@ -1,0 +1,7 @@
+{
+  "schemaType": "minigame",
+  "schemaVersion": "1.0.0",
+  "id": "minigame.assembly",
+  "displayNameKey": "minigame.assembly.name",
+  "plugin": "plugin.engine.mechanic.assembly"
+}

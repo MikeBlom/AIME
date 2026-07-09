@@ -1,0 +1,21 @@
+{
+  "schemaType": "npc",
+  "schemaVersion": "1.0.0",
+  "id": "npc.engineer",
+  "displayNameKey": "npc.engineer.name",
+  "appearance": { "assetRef": "asset.npc.engineer" },
+  "routine": [
+    {
+      "phase": "day",
+      "activity": "PLACEHOLDER work the bench line outside the workshop",
+      "waypoints": [
+        { "x": 214, "y": 112 },
+        { "x": 258, "y": 112 }
+      ],
+      "speed": 18
+    },
+    { "phase": "night", "activity": "PLACEHOLDER rest location" }
+  ],
+  "dialogueRef": "dialogue.engineer-line",
+  "role": "PLACEHOLDER keeper of the assembly line quest"
+}

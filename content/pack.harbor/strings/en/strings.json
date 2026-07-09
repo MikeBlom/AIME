@@ -1,0 +1,26 @@
+{
+  "schemaType": "strings",
+  "schemaVersion": "1.0.0",
+  "locale": "en",
+  "entries": {
+    "region.harbor.name": "PLACEHOLDER The Fog Harbor",
+    "building.lighthouse.name": "PLACEHOLDER The Lighthouse",
+    "building.lighthouse.point.lamp": "PLACEHOLDER The great lamp waits, lens clouded with salt",
+    "building.lighthouse.point.charts": "PLACEHOLDER Tide charts annotated in a steady hand",
+    "npc.keeper.name": "PLACEHOLDER The Keeper",
+    "quest.light-the-beacon.title": "PLACEHOLDER Light the Beacon",
+    "quest.light-the-beacon.obj.time": "PLACEHOLDER Time the lamp to the turning tide",
+    "quest.light-the-beacon.reveal": "PLACEHOLDER fiction-framed insight into a different creator's steadiness",
+    "dialogue.keeper-intro.n1": "PLACEHOLDER The keeper squints at the dark tower, then at you",
+    "dialogue.keeper-intro.n1.solve": "PLACEHOLDER Climb with her and time the lamp yourself",
+    "dialogue.keeper-intro.n1.bypass": "PLACEHOLDER Ask her what the light meant to the boats",
+    "dialogue.keeper-intro.n1.leave": "PLACEHOLDER Come back with the tide",
+    "dialogue.keeper-intro.solved": "PLACEHOLDER The beam sweeps the fog and the harbor exhales",
+    "dialogue.keeper-intro.bypassed": "PLACEHOLDER She tells you about every boat that found its way home",
+    "dialogue.keeper-intro.leave": "PLACEHOLDER She nods and keeps her watch",
+    "metaphor.steady-guidance.framing": "PLACEHOLDER fiction framing: a light kept turning on its beat through every season",
+    "achievement.beacon-lit.title": "PLACEHOLDER Beacon Lit",
+    "achievement.beacon-lit.description": "PLACEHOLDER awarded for the harbor's first light",
+    "ui.prompt.interact": "PLACEHOLDER Press E or tap to interact"
+  }
+}

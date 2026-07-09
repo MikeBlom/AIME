@@ -6,8 +6,30 @@
     {
       "id": "n1",
       "textKey": "dialogue.foreman-intro.n1",
-      "choices": [{ "textKey": "dialogue.foreman-intro.n1.c1", "goto": "n2" }]
+      "choices": [
+        {
+          "textKey": "dialogue.foreman-intro.n1.solve",
+          "goto": "n-solved",
+          "resolves": {
+            "questRef": "quest.restore-power",
+            "objectiveId": "obj.route-power",
+            "outcome": "solved"
+          }
+        },
+        {
+          "textKey": "dialogue.foreman-intro.n1.bypass",
+          "goto": "n-bypassed",
+          "resolves": {
+            "questRef": "quest.restore-power",
+            "objectiveId": "obj.route-power",
+            "outcome": "bypassed"
+          }
+        },
+        { "textKey": "dialogue.foreman-intro.n1.leave", "goto": "n-leave" }
+      ]
     },
-    { "id": "n2", "textKey": "dialogue.foreman-intro.n2", "end": true }
+    { "id": "n-solved", "textKey": "dialogue.foreman-intro.solved", "end": true },
+    { "id": "n-bypassed", "textKey": "dialogue.foreman-intro.bypassed", "end": true },
+    { "id": "n-leave", "textKey": "dialogue.foreman-intro.leave", "end": true }
   ]
 }

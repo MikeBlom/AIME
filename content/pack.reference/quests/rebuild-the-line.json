@@ -1,0 +1,27 @@
+{
+  "schemaType": "quest",
+  "schemaVersion": "1.0.0",
+  "id": "quest.rebuild-the-line",
+  "titleKey": "quest.rebuild-the-line.title",
+  "regionRef": "region.workshop-row",
+  "metaphorRef": "metaphor.systems-craftsmanship",
+  "objectives": [
+    {
+      "id": "obj.assemble-line",
+      "descriptionKey": "quest.rebuild-the-line.obj.assemble"
+    }
+  ],
+  "onComplete": {
+    "emits": ["SystemRestored"],
+    "revealsKey": "quest.rebuild-the-line.reveal",
+    "worldEffect": "PLACEHOLDER region.workshop-row -> online",
+    "grants": {
+      "capabilities": ["capability.line-craft"],
+      "items": ["item.line-blueprint"]
+    }
+  },
+  "bypass": {
+    "allowed": true,
+    "revealsKey": "quest.rebuild-the-line.reveal"
+  }
+}

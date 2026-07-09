@@ -1,0 +1,26 @@
+{
+  "schemaType": "quest",
+  "schemaVersion": "1.0.0",
+  "id": "quest.conduct-the-yard",
+  "titleKey": "quest.conduct-the-yard.title",
+  "regionRef": "region.signal-ridge",
+  "metaphorRef": "metaphor.orchestration",
+  "objectives": [
+    {
+      "id": "obj.conduct-signals",
+      "descriptionKey": "quest.conduct-the-yard.obj.conduct"
+    }
+  ],
+  "onComplete": {
+    "emits": ["SystemRestored"],
+    "revealsKey": "quest.conduct-the-yard.reveal",
+    "worldEffect": "PLACEHOLDER region.signal-ridge -> online",
+    "grants": {
+      "capabilities": ["capability.signal-command"]
+    }
+  },
+  "bypass": {
+    "allowed": true,
+    "revealsKey": "quest.conduct-the-yard.reveal"
+  }
+}

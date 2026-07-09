@@ -1,0 +1,25 @@
+{
+  "schemaType": "building",
+  "schemaVersion": "1.0.0",
+  "id": "building.lighthouse",
+  "displayNameKey": "building.lighthouse.name",
+  "interior": {
+    "size": { "width": 110, "height": 130 },
+    "spawn": { "x": 55, "y": 104 },
+    "colliders": [{ "x": 55, "y": 34, "width": 40, "height": 16 }],
+    "points": [
+      {
+        "id": "point.lamp",
+        "hintKey": "building.lighthouse.point.lamp",
+        "x": 55,
+        "y": 52
+      },
+      {
+        "id": "point.charts",
+        "hintKey": "building.lighthouse.point.charts",
+        "x": 90,
+        "y": 84
+      }
+    ]
+  }
+}

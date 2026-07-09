@@ -3,6 +3,5 @@
   "schemaVersion": "1.0.0",
   "id": "minigame.route-and-balance",
   "displayNameKey": "minigame.route-and-balance.name",
-  "plugin": "plugin.minigame-host",
-  "config": { "note": "PLACEHOLDER mini-game configuration; behavior ships as an engine plugin" }
+  "plugin": "plugin.engine.mechanic.route-and-balance"
 }

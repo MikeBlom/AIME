@@ -120,9 +120,15 @@ describe('bootWorld', () => {
 
   it('spawns the pack quests and restores the region end to end (issue #25)', () => {
     const { platform, handle } = boot();
-    // The reference pack's start region declares one quest, spawned active.
-    const [questEntity] = handle.world.query(QUEST);
-    if (questEntity === undefined) throw new Error('reference pack spawned no quest entity');
+    // The reference pack's start region declares its quests, spawned active;
+    // pick the one whose restoration targets the start region itself.
+    const questEntity = handle.world
+      .query(QUEST)
+      .find(
+        (entity) =>
+          handle.world.getComponent(entity, QUEST)?.regionRef === handle.graph.startRegion,
+      );
+    if (questEntity === undefined) throw new Error('reference pack spawned no start-region quest');
     const definition = handle.world.getComponent(questEntity, QUEST);
     expect(definition?.regionRef).toBe(handle.graph.startRegion);
     expect(handle.world.getComponent(questEntity, QUEST_STATE)?.status).toBe('active');

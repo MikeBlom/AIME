@@ -1,0 +1,14 @@
+{
+  "schemaType": "metaphor",
+  "schemaVersion": "1.0.0",
+  "id": "metaphor.orchestration",
+  "accomplishment": "PLACEHOLDER: a coordinate-many-moving-parts accomplishment; author-facing note only, never rendered",
+  "mechanic": "engine.mechanic.orchestrate",
+  "params": {
+    "tracks": [
+      { "periodSeconds": 2, "windowSeconds": 0.6 },
+      { "periodSeconds": 3, "windowSeconds": 0.6 }
+    ]
+  },
+  "framingKey": "metaphor.orchestration.framing"
+}

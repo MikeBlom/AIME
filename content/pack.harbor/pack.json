@@ -1,0 +1,24 @@
+{
+  "schemaType": "pack",
+  "schemaVersion": "1.0.0",
+  "id": "pack.harbor",
+  "version": "0.1.0",
+  "engineCompatibility": ">=0.1.0 <1.0.0",
+  "creator": {
+    "displayName": "PLACEHOLDER A Different Creator",
+    "tagline": "PLACEHOLDER a second world proving the engine holds no career facts"
+  },
+  "defaultLocale": "en",
+  "entry": { "startRegion": "region.harbor" },
+  "documents": [
+    "regions/**",
+    "buildings/**",
+    "npcs/**",
+    "quests/**",
+    "dialogue/**",
+    "metaphors/**",
+    "achievements/**",
+    "strings/**",
+    "assets/**"
+  ]
+}

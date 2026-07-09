@@ -1,0 +1,28 @@
+{
+  "schemaType": "building",
+  "schemaVersion": "1.0.0",
+  "id": "building.workshop",
+  "displayNameKey": "building.workshop.name",
+  "interior": {
+    "size": { "width": 150, "height": 100 },
+    "spawn": { "x": 75, "y": 80 },
+    "colliders": [
+      { "x": 75, "y": 24, "width": 60, "height": 12 },
+      { "x": 128, "y": 56, "width": 18, "height": 18 }
+    ],
+    "points": [
+      {
+        "id": "point.bench",
+        "hintKey": "building.workshop.point.bench",
+        "x": 75,
+        "y": 38
+      },
+      {
+        "id": "point.blueprints",
+        "hintKey": "building.workshop.point.blueprints",
+        "x": 24,
+        "y": 56
+      }
+    ]
+  }
+}

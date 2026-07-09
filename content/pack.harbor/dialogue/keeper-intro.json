@@ -1,0 +1,35 @@
+{
+  "schemaType": "dialogue",
+  "schemaVersion": "1.0.0",
+  "id": "dialogue.keeper-intro",
+  "nodes": [
+    {
+      "id": "n1",
+      "textKey": "dialogue.keeper-intro.n1",
+      "choices": [
+        {
+          "textKey": "dialogue.keeper-intro.n1.solve",
+          "goto": "n-solved",
+          "resolves": {
+            "questRef": "quest.light-the-beacon",
+            "objectiveId": "obj.time-the-lamp",
+            "outcome": "solved"
+          }
+        },
+        {
+          "textKey": "dialogue.keeper-intro.n1.bypass",
+          "goto": "n-bypassed",
+          "resolves": {
+            "questRef": "quest.light-the-beacon",
+            "objectiveId": "obj.time-the-lamp",
+            "outcome": "bypassed"
+          }
+        },
+        { "textKey": "dialogue.keeper-intro.n1.leave", "goto": "n-leave" }
+      ]
+    },
+    { "id": "n-solved", "textKey": "dialogue.keeper-intro.solved", "end": true },
+    { "id": "n-bypassed", "textKey": "dialogue.keeper-intro.bypassed", "end": true },
+    { "id": "n-leave", "textKey": "dialogue.keeper-intro.leave", "end": true }
+  ]
+}

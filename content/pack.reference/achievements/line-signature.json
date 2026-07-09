@@ -1,0 +1,8 @@
+{
+  "schemaType": "achievement",
+  "schemaVersion": "1.0.0",
+  "id": "achievement.line-signature",
+  "titleKey": "achievement.line-signature.title",
+  "descriptionKey": "achievement.line-signature.description",
+  "unlock": { "kind": "quest-completed", "ref": "quest.rebuild-the-line" }
+}
