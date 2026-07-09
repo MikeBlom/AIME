@@ -91,6 +91,25 @@ export {
 } from './input';
 export type { BindingTable, InputBindings, InputIntent } from './input';
 export {
+  ASSEMBLY_STATE,
+  createAssemblyPlugin,
+  createOrchestratePlugin,
+  createRouteAndBalancePlugin,
+  DEFAULT_BYPASS_HOLD_SECONDS,
+  MECHANIC_ASSEMBLY,
+  MECHANIC_ORCHESTRATE,
+  MECHANIC_ROUTE_AND_BALANCE,
+  MINIGAME_FEEDBACK,
+  ORCHESTRATE_STATE,
+  ROUTE_BALANCE_STATE,
+} from './mechanics';
+export type {
+  AssemblyState,
+  OrchestrateState,
+  OrchestrateTrack,
+  RouteBalanceState,
+} from './mechanics';
+export {
   activeMinigameSession,
   createMechanicPlugin,
   createMechanicSystem,

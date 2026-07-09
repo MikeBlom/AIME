@@ -4,6 +4,6 @@
   "id": "metaphor.distributed-systems",
   "accomplishment": "PLACEHOLDER: what the creator actually did; author-facing note only, never rendered",
   "mechanic": "engine.mechanic.route-and-balance",
-  "params": { "note": "PLACEHOLDER mechanic-specific configuration" },
+  "params": { "channels": [2, 2, 1], "load": 4 },
   "framingKey": "metaphor.distributed-systems.framing"
 }

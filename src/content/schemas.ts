@@ -675,15 +675,72 @@ export const CONTENT_SCHEMAS: ReadonlyMap<string, ContentTypeSpec> = new Map(
  * Grows as mechanic plugins land; the loader also accepts an explicit
  * catalog so plugin-registered mechanics can extend it (FR-ARCH-018).
  */
-export const ENGINE_MECHANICS: readonly string[] = ['engine.mechanic.route-and-balance'];
+export const ENGINE_MECHANICS: readonly string[] = [
+  'engine.mechanic.route-and-balance',
+  'engine.mechanic.assembly',
+  'engine.mechanic.orchestrate',
+];
+
+/** Simulation seconds of held interact resolving `bypass`; every mechanic accepts it. */
+const BYPASS_HOLD: ContentSchema = {
+  type: 'number',
+  description: 'positive seconds of held interact that resolve the bypass (FR-VIS-010)',
+};
 
 /**
- * Params schemas per engine mechanic (issue #33; docs/03 edge case "a
- * metaphor binds to a mechanic whose params schema it violates"): where a
- * mechanic publishes a schema, the loader validates a metaphor's `params`
- * against it with field-level diagnostics. A mechanic without an entry
- * accepts any params shape. Grows with the mechanic catalog (#34); the
- * loader also accepts an explicit map so plugin-provided mechanics
- * validate the same way (FR-ARCH-018).
+ * Params schemas per engine mechanic (issues #33/#34; docs/03 edge case
+ * "a metaphor binds to a mechanic whose params schema it violates"): the
+ * loader validates a metaphor's `params` against its mechanic's schema
+ * with field-level diagnostics. A mechanic without an entry accepts any
+ * params shape. The loader also accepts an explicit map so
+ * plugin-provided mechanics validate the same way (FR-ARCH-018). The
+ * shapes are specified in docs/29-Mini-Games-Catalog.md.
  */
-export const ENGINE_MECHANIC_PARAMS: Readonly<Record<string, ContentSchema>> = {};
+export const ENGINE_MECHANIC_PARAMS: Readonly<Record<string, ContentSchema>> = {
+  'engine.mechanic.route-and-balance': {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      channels: {
+        type: 'array',
+        items: { type: 'number', description: 'positive channel capacity in units' },
+        description: 'per-channel capacities the load routes across',
+      },
+      load: { type: 'number', description: 'positive unit count to route' },
+      bypassHoldSeconds: BYPASS_HOLD,
+    },
+  },
+  'engine.mechanic.assembly': {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      slots: {
+        type: 'array',
+        items: { type: 'number', description: 'correct choice index for this slot' },
+        description: 'ordered slots: the correct offered-part index per slot',
+      },
+      choices: { type: 'number', description: 'how many parts are offered to cycle through' },
+      bypassHoldSeconds: BYPASS_HOLD,
+    },
+  },
+  'engine.mechanic.orchestrate': {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      tracks: {
+        type: 'array',
+        items: {
+          type: 'object',
+          required: ['periodSeconds', 'windowSeconds'],
+          additionalProperties: false,
+          properties: {
+            periodSeconds: { type: 'number', description: 'positive cycle length in seconds' },
+            windowSeconds: { type: 'number', description: 'positive open-window span in seconds' },
+          },
+        },
+        description: 'the cycling tracks to activate inside their windows',
+      },
+      bypassHoldSeconds: BYPASS_HOLD,
+    },
+  },
+};
