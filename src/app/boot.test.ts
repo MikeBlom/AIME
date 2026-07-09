@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { PackLoadError } from '../content';
 import { createHeadlessPlatform } from '../platform';
-import { IDLE_MOTION, MOTION, PLAYER_CONTROLLED, POSITION, REGION } from '../systems';
+import {
+  IDLE_MOTION,
+  MOTION,
+  OBJECTIVE_RESOLVED,
+  PLAYER_CONTROLLED,
+  POSITION,
+  QUEST,
+  QUEST_STATE,
+  REGION,
+  REGION_ONLINE,
+} from '../systems';
 import { bootWorld } from './boot';
 import { packFilesFromBundle } from './pack-bundle';
 
@@ -106,6 +116,36 @@ describe('bootWorld', () => {
     const position = handle.world.getComponent(handle.spawned.player, POSITION);
     expect(position !== undefined && position.x > 160).toBe(true);
     expect(position?.y).toBe(90);
+  });
+
+  it('spawns the pack quests and restores the region end to end (issue #25)', () => {
+    const { platform, handle } = boot();
+    // The reference pack's start region declares one quest, spawned active.
+    const [questEntity] = handle.world.query(QUEST);
+    if (questEntity === undefined) throw new Error('reference pack spawned no quest entity');
+    const definition = handle.world.getComponent(questEntity, QUEST);
+    expect(definition?.regionRef).toBe(handle.graph.startRegion);
+    expect(handle.world.getComponent(questEntity, QUEST_STATE)?.status).toBe('active');
+
+    // A gameplay System resolves the only objective; the quest engine
+    // completes the quest and brings the region online (FR-VIS-004).
+    const stop = handle.start();
+    const [objective] = definition?.objectives ?? [];
+    handle.events.publish(OBJECTIVE_RESOLVED, {
+      questId: definition?.questId ?? '',
+      objectiveId: objective?.id ?? '',
+      outcome: 'solved',
+    });
+    platform.timers.tick(DT); // deliver the resolution
+    platform.timers.tick(DT); // deliver what the quest engine announced
+    stop();
+
+    expect(handle.world.getComponent(questEntity, QUEST_STATE)?.status).toBe('completed');
+    const [regionEntity] = handle.world.query(REGION);
+    if (regionEntity === undefined) throw new Error('no region entity spawned');
+    expect(handle.world.getComponent(regionEntity, REGION)?.state).toBe(REGION_ONLINE);
+    const delivered = handle.events.eventLog.filter((entry) => entry.kind === 'delivered');
+    expect(delivered.map((entry) => entry.type)).toContain('system.restored');
   });
 
   it('keyboard and touch produce equivalent movement intents end to end', () => {

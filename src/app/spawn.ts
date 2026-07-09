@@ -14,9 +14,12 @@ import {
   IDLE_MOTION,
   LOCALE_STRINGS,
   LOGICAL_SPACE,
+  initialQuestState,
   MOTION,
   PLAYER_CONTROLLED,
   POSITION,
+  QUEST,
+  QUEST_STATE,
   REGION,
   RENDERABLE,
 } from '../systems';
@@ -131,6 +134,41 @@ export function spawnWorld(world: EntityStore, graph: ResolvedContentGraph): Spa
   world.addComponent(player, MOTION, IDLE_MOTION);
   world.addComponent(player, RENDERABLE, { kind: 'player', ...PLAYER_SIZE });
   world.addComponent(player, COLLIDER, { ...PLAYER_SIZE, mode: 'solid' });
+
+  // Quest entities for the region's quests (issue #25), appended after the
+  // long-standing entities so ids stay stable for saves from earlier worlds.
+  // Which quest restores what is entirely the pack's declaration.
+  for (const id of [...stringList(contains['quests'])].sort()) {
+    const questDoc = asRecord(graph.entities.get(id)?.doc);
+    if (typeof questDoc['titleKey'] !== 'string' || typeof questDoc['regionRef'] !== 'string') {
+      continue; // not a spawnable quest document; validation already warned
+    }
+    const objectives = (Array.isArray(questDoc['objectives']) ? questDoc['objectives'] : [])
+      .map((objective) => asRecord(objective))
+      .filter(
+        (objective) =>
+          typeof objective['id'] === 'string' && typeof objective['descriptionKey'] === 'string',
+      )
+      .map((objective) => ({
+        id: objective['id'] as string,
+        descriptionKey: objective['descriptionKey'] as string,
+      }));
+    const onComplete = asRecord(questDoc['onComplete']);
+    const bypass = asRecord(questDoc['bypass']);
+    const definition = {
+      questId: id,
+      titleKey: questDoc['titleKey'],
+      regionRef: questDoc['regionRef'],
+      objectives,
+      emitsOnComplete: stringList(onComplete['emits']),
+      revealsKey: typeof onComplete['revealsKey'] === 'string' ? onComplete['revealsKey'] : null,
+      bypassAllowed: bypass['allowed'] === true,
+      bypassRevealsKey: typeof bypass['revealsKey'] === 'string' ? bypass['revealsKey'] : null,
+    };
+    const quest = world.createEntity();
+    world.addComponent(quest, QUEST, definition);
+    world.addComponent(quest, QUEST_STATE, initialQuestState(definition));
+  }
 
   return { regionId: regionEntity.id, player };
 }
