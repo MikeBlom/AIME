@@ -29,6 +29,7 @@ import {
   createRouteAndBalancePlugin,
   createSaveLoadPlugin,
   createInputPlugin,
+  createLocalePlugin,
   createUiPlugin,
   createWorldSimPlugin,
   loadWorld,
@@ -93,6 +94,9 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
   // Before input (issue #37): a rebind applied this step is read by the
   // Input System the same step, so remaps land without a frame of lag.
   registry.register(createAccessibilityPlugin());
+  // The locale service (issue #38): resolves the strings table every
+  // player-visible surface reads, before UI consumes it this step.
+  registry.register(createLocalePlugin());
   registry.register(createInputPlugin());
   registry.register(movementPlugin);
   // Registered between Movement and Physics so the stable tiebreak keeps

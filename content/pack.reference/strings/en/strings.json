@@ -73,6 +73,7 @@
     "ui.settings.action.move-right": "PLACEHOLDER Move right",
     "ui.settings.action.move-up": "PLACEHOLDER Move up",
     "ui.settings.action.move-down": "PLACEHOLDER Move down",
-    "ui.settings.action.interact": "PLACEHOLDER Interact"
+    "ui.settings.action.interact": "PLACEHOLDER Interact",
+    "ui.settings.locale": "PLACEHOLDER Language"
   }
 }

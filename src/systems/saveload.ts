@@ -41,6 +41,7 @@ import { ACCESSIBILITY_SETTINGS } from './accessibility';
 import { ACHIEVEMENT_STATE } from './achievements';
 import { AUDIO_SETTINGS } from './audio';
 import { INPUT_BINDINGS } from './input';
+import { LOCALE_STATE } from './locale';
 import { PROGRESSION } from './progression';
 import { QUEST_STATE, SYSTEM_RESTORED } from './quest';
 import { CAMERA } from './render';
@@ -87,6 +88,8 @@ export const PROGRESSION_SLICES: readonly ComponentType<ComponentData>[] = [
   // visitor's access choices survive a return visit.
   ACCESSIBILITY_SETTINGS,
   INPUT_BINDINGS,
+  // The chosen locale (issue #38), so a return visit keeps its language.
+  LOCALE_STATE,
 ];
 
 /** Gameplay events that trigger an autosave on the following update. */

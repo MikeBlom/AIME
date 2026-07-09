@@ -20,6 +20,7 @@ import {
   DOORWAY_SIZE,
   IDLE_MOTION,
   LOCALE_STRINGS,
+  LOCALE_TABLES,
   LOCKED_ACHIEVEMENT,
   LOGICAL_SPACE,
   initialQuestState,
@@ -197,6 +198,21 @@ export function spawnWorld(world: EntityStore, graph: ResolvedContentGraph): Spa
   }
   const strings = world.createEntity();
   world.addComponent(strings, LOCALE_STRINGS, { entries: stringEntries });
+
+  // Land every locale's table too (DATA-FR-024), so the Locale System can
+  // re-resolve LOCALE_STRINGS when the active locale changes (issue #38)
+  // without reaching back into the content graph.
+  const localeEntries: Record<string, Record<string, string>> = {};
+  for (const [locale, table] of graph.strings) {
+    const entries: Record<string, string> = {};
+    for (const [key, text] of table) entries[key] = text;
+    localeEntries[locale] = entries;
+  }
+  const locales = world.createEntity();
+  world.addComponent(locales, LOCALE_TABLES, {
+    defaultLocale: graph.defaultLocale,
+    locales: localeEntries,
+  });
 
   // Default view: a zoom-1 camera on the region center — the whole-space
   // fit. The Camera System adopts this entity at init and owns the slice.
