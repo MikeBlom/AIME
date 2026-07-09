@@ -48,6 +48,16 @@ export function mountBrowserHost(): BrowserHost | null {
   overlay.style.pointerEvents = 'none';
   overlay.style.whiteSpace = 'pre';
   overlay.style.zIndex = '10';
+  // A toggled debug surface (issue #42, FR-OBS-005): hidden by default so
+  // a visitor never meets developer chrome; backquote reveals and hides.
+  // Pure host chrome — the world's behavior is identical either way
+  // (FR-ARCH-031).
+  overlay.style.display = 'none';
+  const onOverlayToggle = (event: KeyboardEvent) => {
+    if (event.code !== 'Backquote') return;
+    overlay.style.display = overlay.style.display === 'none' ? 'block' : 'none';
+  };
+  window.addEventListener('keydown', onOverlayToggle);
 
   const resize = () => {
     canvas.width = window.innerWidth;
@@ -74,6 +84,7 @@ export function mountBrowserHost(): BrowserHost | null {
     },
     dispose: () => {
       window.removeEventListener('resize', resize);
+      window.removeEventListener('keydown', onOverlayToggle);
       document.removeEventListener('visibilitychange', onVisibility);
       canvas.remove();
       overlay.remove();

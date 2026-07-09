@@ -8,6 +8,7 @@
  * its labels are technical identifiers rather than locale keys.
  */
 import type { EventBus, ModuleRegistry, RuntimeLoop, SystemTiming } from '../core';
+import { faultMessage } from './faults';
 import type { FrameProfile } from './perf';
 import { PERF_BUDGETS } from './perf';
 
@@ -29,6 +30,13 @@ export interface DebugSnapshot {
   readonly events: readonly DebugEventEntry[];
   /** Rolling step-cost profile vs. budgets (FR-PERF-006); null when absent. */
   readonly profile: FrameProfile | null;
+  /** The most recent isolated fault's context (FR-OBS-004); null when clean. */
+  readonly lastFault: {
+    readonly systemId: string;
+    readonly step: number;
+    readonly frame: number;
+    readonly message: string;
+  } | null;
 }
 
 /** Number of trailing event-log entries the overlay shows. */
@@ -41,6 +49,7 @@ export function buildDebugSnapshot(
   profile: FrameProfile | null = null,
 ): DebugSnapshot {
   const time = loop.context.time;
+  const fault = loop.faults.at(-1);
   return {
     frame: time.frame,
     step: time.step,
@@ -56,6 +65,15 @@ export function buildDebugSnapshot(
       delivery: entry.delivery,
     })),
     profile,
+    lastFault:
+      fault === undefined
+        ? null
+        : {
+            systemId: fault.systemId,
+            step: fault.step,
+            frame: fault.frame,
+            message: faultMessage(fault.error),
+          },
   };
 }
 
@@ -74,7 +92,10 @@ export function formatDebugOverlay(snapshot: DebugSnapshot): string {
   const lines = [
     `frame ${snapshot.frame}  step ${snapshot.step}  sim ${snapshot.simSeconds.toFixed(2)}s` +
       (snapshot.paused ? '  [paused]' : ''),
-    `faults ${snapshot.faultCount}`,
+    `faults ${snapshot.faultCount}` +
+      (snapshot.lastFault === null
+        ? ''
+        : `  last ${snapshot.lastFault.systemId}@${snapshot.lastFault.step}: ${snapshot.lastFault.message}`),
     ...profileLine,
     'systems:',
     ...snapshot.systems.map((id) => {
