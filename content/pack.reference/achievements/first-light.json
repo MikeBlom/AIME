@@ -3,5 +3,9 @@
   "schemaVersion": "1.0.0",
   "id": "achievement.first-light",
   "titleKey": "achievement.first-light.title",
-  "descriptionKey": "achievement.first-light.description"
+  "descriptionKey": "achievement.first-light.description",
+  "unlock": {
+    "kind": "restored-count",
+    "count": 1
+  }
 }

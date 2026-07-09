@@ -12,6 +12,7 @@ import { loadPack } from '../content';
 import type { Platform } from '../platform';
 import {
   animationPoses,
+  createAchievementsPlugin,
   createAnimationPlugin,
   createAudioPlugin,
   createBuildingPlugin,
@@ -99,6 +100,9 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
   // After quest: progression records the resolutions the quest engine
   // announced this step (issue #31).
   registry.register(createProgressionPlugin());
+  // After progression: achievements evaluate against the record it just
+  // settled (issue #32).
+  registry.register(createAchievementsPlugin());
   registry.register(createDialoguePlugin());
   registry.register(createAnimationPlugin());
   registry.register(createCameraPlugin());

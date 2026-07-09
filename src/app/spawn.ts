@@ -9,6 +9,8 @@ import type { ComponentData, EntityId, EntityStore } from '../core';
 import type { ResolvedContentGraph } from '../content';
 import type { NpcRoutineEntry } from '../systems';
 import {
+  ACHIEVEMENT,
+  ACHIEVEMENT_STATE,
   ASSET_MANIFEST,
   BUILDING,
   CAMERA,
@@ -18,6 +20,7 @@ import {
   DOORWAY_SIZE,
   IDLE_MOTION,
   LOCALE_STRINGS,
+  LOCKED_ACHIEVEMENT,
   LOGICAL_SPACE,
   initialQuestState,
   MOTION,
@@ -27,6 +30,7 @@ import {
   QUEST,
   QUEST_STATE,
   readInterior,
+  readUnlockRule,
   REGION,
   REGION_AMBIENT,
   RENDERABLE,
@@ -288,6 +292,25 @@ export function spawnWorld(world: EntityStore, graph: ResolvedContentGraph): Spa
       }));
     const dialogue = world.createEntity();
     world.addComponent(dialogue, DIALOGUE, { dialogueId: id, nodes });
+  }
+
+  // Achievement entities for every achievement document (issue #32):
+  // definitions with content-declared unlock rules plus the locked state
+  // slice; ids stay stable after the dialogues.
+  for (const [id, entity] of graph.byType.get('achievement') ?? []) {
+    const achievementDoc = entity.doc;
+    if (typeof achievementDoc['titleKey'] !== 'string') continue; // validation already warned
+    const achievement = world.createEntity();
+    world.addComponent(achievement, ACHIEVEMENT, {
+      achievementId: id,
+      titleKey: achievementDoc['titleKey'],
+      descriptionKey:
+        typeof achievementDoc['descriptionKey'] === 'string'
+          ? achievementDoc['descriptionKey']
+          : null,
+      unlock: readUnlockRule(achievementDoc['unlock']),
+    });
+    world.addComponent(achievement, ACHIEVEMENT_STATE, LOCKED_ACHIEVEMENT);
   }
 
   // Entry doorways for enterable buildings (issue #30): static world

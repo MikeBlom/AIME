@@ -29,6 +29,7 @@ import type {
 } from '../core';
 import { defineComponentType, defineEventType } from '../core';
 import type { AudioOutput } from '../platform';
+import { ACHIEVEMENT_UNLOCKED } from './achievements';
 import type { Camera } from './render';
 import { ASSET_MANIFEST, CAMERA } from './render';
 import { LOGICAL_SPACE, MOVEMENT_STARTED, MOVEMENT_STOPPED, REGION, REGION_ENTERED } from './scene';
@@ -87,6 +88,9 @@ const CUE_BINDINGS: readonly { readonly type: EventType<EventPayload>; readonly 
   { type: MOVEMENT_STARTED, key: 'audio.cue.movement-started' },
   { type: MOVEMENT_STOPPED, key: 'audio.cue.movement-stopped' },
   { type: REGION_ENTERED, key: 'audio.cue.region-entered' },
+  // The recognition chime (issue #32): plays only when the pack's manifest
+  // supplies the asset, silent otherwise (FR-AUD-002).
+  { type: ACHIEVEMENT_UNLOCKED, key: 'audio.cue.achievement-unlocked' },
 ];
 
 /** Distance attenuation floor: a far cue is quieter, never inaudible. */

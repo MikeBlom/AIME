@@ -23,6 +23,18 @@ export {
 } from './animation';
 export type { Animatable, AnimationState, OneShotState } from './animation';
 export {
+  ACHIEVEMENT,
+  ACHIEVEMENT_STATE,
+  ACHIEVEMENT_UNLOCKED,
+  createAchievementsPlugin,
+  createAchievementsSystem,
+  LOCKED_ACHIEVEMENT,
+  readUnlockRule,
+  ruleSatisfied,
+  TOAST_SECONDS,
+} from './achievements';
+export type { AchievementDefinition, AchievementState, UnlockRule } from './achievements';
+export {
   ambientBedCandidates,
   AUDIO_CONTROL,
   AUDIO_SETTINGS,
