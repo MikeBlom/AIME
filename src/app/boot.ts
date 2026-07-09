@@ -19,6 +19,7 @@ import {
   createCameraPlugin,
   createDialoguePlugin,
   createEnvironmentPlugin,
+  createMinigameHostPlugin,
   createNpcPlugin,
   createProgressionPlugin,
   createQuestPlugin,
@@ -97,6 +98,10 @@ export function bootWorld(options: BootWorldOptions): WorldHandle {
   registry.register(createWorldSimPlugin());
   registry.register(createEnvironmentPlugin());
   registry.register(createQuestPlugin());
+  // The mini-games host (issue #33): serves the launch API and forwards
+  // mechanic resolutions into the quest engine's result feed. Mechanic
+  // plugins from the catalog (#34) register after it.
+  registry.register(createMinigameHostPlugin());
   // After quest: progression records the resolutions the quest engine
   // announced this step (issue #31).
   registry.register(createProgressionPlugin());

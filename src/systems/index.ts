@@ -90,6 +90,30 @@ export {
   inputSystem,
 } from './input';
 export type { BindingTable, InputBindings, InputIntent } from './input';
+export {
+  activeMinigameSession,
+  createMechanicPlugin,
+  createMechanicSystem,
+  createMinigameHostPlugin,
+  createMinigameHostSystem,
+  IDLE_MINIGAME_SESSION,
+  MECHANIC_TYPE,
+  METAPHOR,
+  MINIGAME_ENDED,
+  MINIGAME_LAUNCH_REQUESTED,
+  MINIGAME_RESOLVED,
+  MINIGAME_SESSION,
+  MINIGAME_STARTED,
+} from './minigame';
+export type {
+  MechanicDescriptor,
+  MechanicOutcome,
+  MechanicParams,
+  MechanicSpec,
+  MetaphorBinding,
+  MinigameSession,
+  MinigameSessionState,
+} from './minigame';
 export { movementPlugin, movementSystem } from './movement';
 export {
   activeRoutineEntry,

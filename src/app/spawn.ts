@@ -23,6 +23,7 @@ import {
   LOCKED_ACHIEVEMENT,
   LOGICAL_SPACE,
   initialQuestState,
+  METAPHOR,
   MOTION,
   NPC,
   PLAYER_CONTROLLED,
@@ -241,6 +242,8 @@ export function spawnWorld(world: EntityStore, graph: ResolvedContentGraph): Spa
       questId: id,
       titleKey: questDoc['titleKey'],
       regionRef: questDoc['regionRef'],
+      // The metaphor binding the mini-games host resolves on launch (#33).
+      metaphorRef: typeof questDoc['metaphorRef'] === 'string' ? questDoc['metaphorRef'] : null,
       objectives,
       emitsOnComplete: stringList(onComplete['emits']),
       revealsKey: typeof onComplete['revealsKey'] === 'string' ? onComplete['revealsKey'] : null,
@@ -327,6 +330,25 @@ export function spawnWorld(world: EntityStore, graph: ResolvedContentGraph): Spa
     world.addComponent(doorway, RENDERABLE, { kind: 'doorway', ...DOORWAY_SIZE });
     world.addComponent(doorway, COLLIDER, { ...DOORWAY_SIZE, mode: 'trigger' });
     world.addComponent(doorway, DOORWAY, { buildingId: building.buildingId, role: 'entry' });
+  }
+
+  // Metaphor bindings for every metaphor document (issue #33): the
+  // accomplishment -> mechanic mapping the mini-games host resolves when a
+  // quest objective launches. Only the binding spawns — the accomplishment
+  // note never leaves the pack (DATA-FR-010). Appended after the
+  // long-standing entities so earlier ids stay stable for saves.
+  for (const [id, entity] of graph.byType.get('metaphor') ?? []) {
+    const doc = entity.doc;
+    if (typeof doc['mechanic'] !== 'string' || typeof doc['framingKey'] !== 'string') {
+      continue; // not a spawnable metaphor document; validation already warned
+    }
+    const metaphor = world.createEntity();
+    world.addComponent(metaphor, METAPHOR, {
+      metaphorId: id,
+      mechanicId: doc['mechanic'],
+      params: asRecord(doc['params']),
+      framingKey: doc['framingKey'],
+    });
   }
 
   return { regionId: regionEntity.id, player };
